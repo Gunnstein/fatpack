@@ -1,7 +1,6 @@
 # FatPACK
 
-A simple library for fatigue analysis. Includes cycle counting and damage
-accumulation algorithms as well as definitions for SN-curves.
+Package for fatigue analysis (FatPACK).
 
 ## Table of Contents
 
@@ -12,26 +11,16 @@ accumulation algorithms as well as definitions for SN-curves.
 
 ## Installation
 
-Download to your project directory, add `README.md`, and commit:
+Download the repository to your computer and run the setup.py script, i.e
 
-```sh
-curl -LO http://git.io/Xy0Chg
-git add README.md
-git commit -m "Use README Boilerplate"
-```
+    python setup.py install
 
 ## Usage
 
-Replace the contents of `README.md` with your project's:
+The package includes modules for:
 
-- Name
-- Description
-- Installation instructions
-- Usage instructions
-- Support instructions
-- Contributing instructions
-
-Feel free to remove any sections that aren't applicable to your project.
+- Rainflow counting
+- ...
 
 ## Support
 
