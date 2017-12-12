@@ -9,18 +9,20 @@ Package for fatigue analysis (FatPACK).
 - [Support](#support)
 - [Contributing](#contributing)
 
+
 ## Installation
 
 Download the repository to your computer and run the setup.py script, i.e
 
     python setup.py install
 
+
 ## Usage
 
 The package includes modules for:
 
 - Rainflow counting
-- ...
+
 
 ## Support
 

@@ -3,3 +3,4 @@ alternatives.py
 *.pdf
 *.pyc
 data.txt
+/literature
