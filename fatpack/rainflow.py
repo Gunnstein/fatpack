@@ -187,7 +187,7 @@ def get_rainflow_matrix(cycles, rowbins, colbins):
     ValueError
         If rowbins or colbins are not monotonic.
     """
-    mat = np.zeros((rowbins.size-1, colbins.size-1), dtype=np.float)
+    mat = np.zeros((rowbins.size, colbins.size), dtype=np.float)
     nrows = np.digitize(cycles[:, 0], rowbins)-1
     ncols = np.digitize(cycles[:, 1], colbins)-1
     for nr, nc in zip(nrows, ncols):
