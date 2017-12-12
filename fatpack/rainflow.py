@@ -230,3 +230,30 @@ if __name__ == "__main__":
 
     runner = unittest.TextTestRunner()
     runner.run(testsuite())
+
+
+def get_range_count(y, bins=10, weights=None):
+    """Return count and the values ranges (midpoint of bin).
+
+    Arguments
+    ---------
+    y : ndarray
+        Array with the values where the
+    bins : Optional[ndarray,int]
+        If bins is a sequence, the values are treated as the left edges (and
+        the rightmost edge) of the bins.
+        if bins is an int, a sequence is created diving the range `min`--`max`
+        of y into `bin` number of equally sized bins.
+    weights : Optional[ndarray]
+        Array with same size as y, can be used to account for half cycles, i.e
+        applying a weight of 0.5 to a value in yields a counting value of 0.5
+
+    Returns
+    -------
+    N, S : ndarray
+        The count and the characteristic value for the range.
+    """
+    N, bns = np.histogram(y, bins=bins, weights=weights)
+    dbns = np.diff(bns)
+    S = bns[:-1] - dbns / 2.
+    return N, S
