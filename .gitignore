@@ -1,3 +1,5 @@
 workspace.py
+alternatives.py
 *.pdf
+*.pyc
 data.txt

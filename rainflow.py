@@ -1,120 +1,12 @@
 # -*- coding: utf-8 -*-
+"""
+Implementation a 4-point rainflow counting algorithm in numpy,
+roughly follows the terminology and implementation presented in
+
+    `ISO 12110-2, Metallic materials - Fatigue testing - Variable amplitude
+     fatigue testing`
+"""
 import numpy as np
-import unittest
-
-TESTDATA = dict(
-            dataseries  = np.array([
-                                4.2,  7.3,  2.0,  9.8,  9.6, 10.3,  5.2,  8.5,
-                                3.0,  4.4,  2.2,  2.4,  2.2, 12.0,  5.5, 11.1,
-                                1.0,  4.3,  3.5,  9.5,  6.0, 12.0,  3.9,  8.3,
-                                1.2,  8.6, 3.9,  6.2
-                                ]),
-            reversals   = np.array([
-                                4.,  7.,  2., 10.,  5.,  9.,  3.,  4.,
-                                2., 12.,  5., 11.,  1.,  4.,  3., 10.,
-                                6., 12.,  4.,  8.,  1.,  9.,  4.,  6.
-                                ]),
-            cycles      = np.array([
-                                [ 5.,  9.], [ 3.,  4.], [10.,  2.], [ 5., 11.],
-                                [ 4.,  3.], [10.,  6.], [ 4.,  8.], [ 1., 12.],
-                                ]),
-            residue     = np.array([4., 7., 2., 12., 1., 9., 4., 6.]),
-            duplicated_residue = np.array(
-                                [4., 7., 2., 12., 1., 9., 4., 6.,
-                                 4., 7., 2., 12., 1., 9., 4., 6.]),
-            cycles_residue = np.array([
-                                [ 4.,  6.], [ 4.,  7.], [ 9.,  2.], [ 1., 12],
-                                ]),
-            cycles_total = np.array([
-                                [ 5.,  9.], [ 3.,  4.], [10.,  2.], [ 5., 11.],
-                                [ 4.,  3.], [10.,  6.], [ 4.,  8.], [ 1., 12.],
-                                [ 4.,  6.], [ 4.,  7.], [ 9.,  2.], [ 1., 12.],
-                                ]),
-            classes = np.array([1., 2., 3., 4., 5., 6.,
-                                7., 8., 9., 10., 11., 12.]),
-            class_boundaries = np.array([
-                                0.5,  1.5,  2.5,  3.5, 4.5, 5.5, 6.5, 7.5, 8.5,
-                                9.5, 10.5, 11.5, 12.5]),
-            starting_destination_rainflow_matrix = np.array(
-                            [[ 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 1.],
-                             [ 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.],
-                             [ 0., 0., 0., 1., 0., 0., 0., 0., 0., 0., 0., 0.],
-                             [ 0., 0., 1., 0., 0., 0., 0., 1., 0., 0., 0., 0.],
-                             [ 0., 0., 0., 0., 0., 0., 0., 0., 1., 0., 1., 0.],
-                             [ 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.],
-                             [ 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.],
-                             [ 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.],
-                             [ 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.],
-                             [ 0., 1., 0., 0., 0., 1., 0., 0., 0., 0., 0., 0.],
-                             [ 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.],
-                             [ 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.]]
-                                                            )
-   )
-
-
-class BaseArrayTestCase(unittest.TestCase):
-    def test_array_equal(self):
-        np.testing.assert_array_equal(self.result, self.result_true)
-
-    def test_allclose(self):
-        np.testing.assert_allclose(self.result, self.result_true)
-
-
-class FindReversalsTests(BaseArrayTestCase):
-    def setUp(self):
-        self.result_true = TESTDATA['reversals']
-        y = TESTDATA['dataseries']
-        self.result, __ = find_reversals(y, k=11)
-
-
-class DuplicateOpenCycleSequenceTests(BaseArrayTestCase):
-    def setUp(self):
-        self.result_true = TESTDATA['duplicated_residue']
-        self.result = duplicate_open_cycle_sequence(TESTDATA['residue'])
-
-
-class FindRainflowCyclesTests(unittest.TestCase):
-    def setUp(self):
-        self.cycles_true = TESTDATA['cycles']
-        self.residue_true = TESTDATA['residue']
-        self.reversals = TESTDATA['reversals']
-        self.cycles, self.residue = find_rainflow_cycles(self.reversals)
-        self.result = self.cycles
-        self.result_true = self.cycles_true
-
-    def test_cycles_allclose(self):
-        np.testing.assert_allclose(self.cycles, self.cycles_true)
-
-    def test_cycles_array_equal(self):
-        np.testing.assert_array_equal(self.cycles, self.cycles_true)
-
-    def test_residue_allclose(self):
-        np.testing.assert_allclose(self.residue, self.residue_true)
-
-    def test_residue_array_equal(self):
-        np.testing.assert_array_equal(self.residue, self.residue_true)
-
-
-class GetLoadClassesTests(BaseArrayTestCase):
-    def setUp(self):
-        self.result_true = TESTDATA['classes']
-        y = TESTDATA['dataseries']
-        self.result = get_load_classes(y, k=11)
-
-
-class GetLoadClassBoundariesTests(BaseArrayTestCase):
-    def setUp(self):
-        self.result_true = TESTDATA['class_boundaries']
-        y = TESTDATA['dataseries']
-        self.result = get_load_class_boundaries(y, k=11)
-
-
-class GetRainflowMatrixTests(BaseArrayTestCase):
-    def setUp(self):
-        self.result_true = TESTDATA['starting_destination_rainflow_matrix']
-        cycles = TESTDATA['cycles']
-        bins = TESTDATA['class_boundaries']
-        self.result = get_rainflow_matrix(cycles, bins, bins)
 
 
 def get_load_classes(y, k=64):
@@ -129,7 +21,7 @@ def get_load_class_boundaries(y, k=64):
     return np.linspace(Y.min()-dY/2., Y.max()+dY/2., k+2)
 
 
-def find_reversals(y, k=64):
+def get_reversals(y, k=64):
     """Return reversals (peaks and valleys) and indices of reversals in `y`.
 
     The data points in the dataseries `y` are classified into `k` constant
@@ -153,7 +45,7 @@ def find_reversals(y, k=64):
         reversals.
     """
     y = y.copy()  # Make sure we do not change the original sequence
-    sgn = lambda x: x / np.abs(x)
+    sgn = np.sign
     Y = get_load_class_boundaries(y, k)
     dY = Y[1] - Y[0]
 
@@ -182,7 +74,6 @@ def find_reversals(y, k=64):
         if yi != y[ix[-1]]:
             ix.append(n)
 
-
     # Peak-valley filtering
     revix = [0]
     for n in range(len(ix)-1):
@@ -202,10 +93,13 @@ def find_reversals(y, k=64):
     return y[revix], np.array(revix)
 
 
-def duplicate_open_cycle_sequence(reversals):
+def duplicate_reversals(reversals):
     """Duplicate, join and return the reversal series.
 
-    See ISO 12110-2:2013, A.3.3.2 for further information
+    The residual after one pass with the 4-point rainflow algorithm should be
+    processsed for the remaining cycles, the approach is to duplicate and join
+    the residual and then run the rainflow algorithm on the duplicated
+    serices once more. See ISO 12110-2:2013, A.3.3.2 for further information
 
     Arguments
     ---------
@@ -231,8 +125,8 @@ def duplicate_open_cycle_sequence(reversals):
     return np.concatenate(result)
 
 
-def find_rainflow_cycles(reversals):
-    """Return the rainflow cycles and residue from a sequence of reversals.
+def get_rainflow_cycles(reversals):
+    """Return the rainflow cycles and residual from a sequence of reversals.
 
     Arguments
     ---------
@@ -249,24 +143,23 @@ def find_rainflow_cycles(reversals):
     output_array = np.zeros((len(input_array), 2), np.double)
     ix_output_array = 0
 
-    S = []
+    residual = []
     for n, reversal in enumerate(input_array):
-        S.append(reversal)
-        while len(S) >= 4:
-            S0, S1, S2, S3 = S[-4], S[-3], S[-2], S[-1]
+        residual.append(reversal)
+        while len(residual) >= 4:
+            S0, S1, S2, S3 = residual[-4], residual[-3], residual[-2], residual[-1]
             dS1, dS2, dS3 = np.abs(S1-S0), np.abs(S2-S1), np.abs(S3-S2)
 
             if (dS2 <= dS1) and (dS2 <= dS3):
                 output_array[ix_output_array] = [S1, S2]
                 ix_output_array += 1
-                S.pop(-3)
-                S.pop(-2)
+                residual.pop(-3)
+                residual.pop(-2)
             else:
                 break
 
-    residue = np.array(S)
     output_array = output_array[:ix_output_array]
-    return output_array, residue
+    return output_array, np.array(residual)
 
 
 def get_rainflow_matrix(cycles, rowbins, colbins):
@@ -302,54 +195,38 @@ def get_rainflow_matrix(cycles, rowbins, colbins):
     return mat
 
 
-def extract_ranges(y, k=64):
+def get_rainflow_ranges(y, k=64):
     """Returns the ranges of the complete series (incl. open cycle sequence)
 
-    Returns the ranges which
+    Returns the ranges by first determining the reversals of the dataseries
+    `y` classified into `k` loaded classes, then the cycles and residual
+    are found
 
+    Arguments
+    ---------
+    y : ndarray
+        Dataseries containing the signal to find the reversals for.
+    k : int
+        The number of intervals to divide the min-max range of the dataseries
+        into.
+
+    Returns
+    -------
+    ranges : ndarray
+        The ranges identified by the rainflow algorithm in the dataseries.
     """
-    reversals, __ = find_reversals(y, k)
-    cycles_firstpass, residue = find_rainflow_cycles(reversals)
-    processed_residue = duplicate_open_cycle_sequence(residue)
-    cycles_open_sequence, _ = find_rainflow_cycles(processed_residue)
+    reversals, __ = get_reversals(y, k)
+    cycles_firstpass, residual = get_rainflow_cycles(reversals)
+    processed_residual = duplicate_reversals(residual)
+    cycles_open_sequence, _ = get_rainflow_cycles(processed_residual)
     cycles = np.concatenate((cycles_firstpass, cycles_open_sequence))
-    means = (cycles[:, 1]+cycles[:, 0]) / 2.
     ranges = np.abs(cycles[:, 1] - cycles[:, 0])
-    return ranges, means
+    return ranges
 
-def testsuite():
-    suite = unittest.TestSuite()
-    for Tests in [FindReversalsTests, DuplicateOpenCycleSequenceTests,
-                  GetLoadClassesTests, GetLoadClassBoundariesTests,
-                  GetRainflowMatrixTests]:
-        for f in ['test_array_equal', 'test_allclose']:
-            suite.addTest(Tests(f))
-    suite.addTest(FindRainflowCyclesTests('test_cycles_allclose'))
-    suite.addTest(FindRainflowCyclesTests('test_cycles_array_equal'))
-    suite.addTest(FindRainflowCyclesTests('test_residue_allclose'))
-    suite.addTest(FindRainflowCyclesTests('test_residue_array_equal'))
-    return suite
 
 if __name__ == "__main__":
-    from time import time
-    runner=unittest.TextTestRunner()
-    runner.run(testsuite())
+    import unittest
+    from tests import testsuite
 
-    y = np.random.normal(size=int(10**6)) * 25
-    ts = []
-    t = lambda: ts.append(time())
-    t0 = time()
-    reversals, _ = find_reversals(y)
-    t()
-    cycles_firstpass, residue = find_rainflow_cycles(reversals)
-    t()
-    processed_residue = duplicate_open_cycle_sequence(residue)
-    t()
-    cycles_open_sequence, _ = find_rainflow_cycles(processed_residue)
-    t()
-    cycles = np.concatenate((cycles_firstpass, cycles_open_sequence))
-    t()
-    t0i = t0
-    for ti in ts:
-        print "{0:.5f}".format(ti-t0i)
-        t0i = ti
+    runner = unittest.TextTestRunner()
+    runner.run(testsuite())
