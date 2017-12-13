@@ -1,16 +1,22 @@
 # -*- coding: utf-8 -*-
 """
-Implementation a 4-point rainflow counting algorithm in numpy,
-roughly follows the terminology and implementation presented in
+Implementation a 4-point rainflow counting algorithm in numpy. The
+implementation and terminology is based off on the following resources:
+
+    `C. Amzallag et. al. Standardization of the rainflow counting method for
+    fatigue analysis. International Journal of Fatigue, 16 (1994) 287-293`
 
     `ISO 12110-2, Metallic materials - Fatigue testing - Variable amplitude
-     fatigue testing`
+     fatigue testing.`
+
+    `G. Marsh et. al. Review and application of Rainflow residue processing
+    techniques for accurate fatigue damage estimation. International Journal
+    of Fatigue, 82 (2016) 757-765`
 """
 import numpy as np
-import warnings
 
-__all__ = ["get_reversals", "get_rainflow_cycles", "get_rainflow_matrix",
-           "get_rainflow_ranges", "get_range_count", "duplicate_reversals"]
+__all__ = ["find_reversals", "find_rainflow_cycles", "find_rainflow_matrix",
+           "find_rainflow_ranges", "find_range_count", "concatenate_reversals"]
 
 
 def get_load_classes(y, k=64):
@@ -25,7 +31,7 @@ def get_load_class_boundaries(y, k=64):
     return np.linspace(Y.min()-dY/2., Y.max()+dY/2., k+2)
 
 
-def get_reversals(y, k=64):
+def find_reversals(y, k=64):
     """Return reversals (peaks and valleys) and indices of reversals in `y`.
 
     The data points in the dataseries `y` are classified into `k` constant
@@ -97,40 +103,40 @@ def get_reversals(y, k=64):
     return y[revix], np.array(revix)
 
 
-def duplicate_reversals(reversals):
-    """Duplicate, join and return the reversal series.
+def concatenate_reversals(reversals1, reversals2):
+    """Concatenate two reversal series.
 
-    The residual after one pass with the 4-point rainflow algorithm should be
-    processsed for the remaining cycles, the approach is to duplicate and join
-    the residual and then run the rainflow algorithm on the duplicated
-    serices once more. See ISO 12110-2:2013, A.3.3.2 for further information
+    The two reversal series are concatenated in the order given in args, i.e
+    'reversal1' is  placed before 'reversal2'. The concatenation preserves
+    the peak-valley condition at the border by deleting none, one or two
+    points.
 
     Arguments
     ---------
-    reversals : ndarray
-        The sequence of reversals.
+    reversals1, reversals2 : ndarray
+    The sequence reversal1 is put first, i.e before reversal2
 
     Returns
     -------
     ndarray
-        Series of reversals of the duplicated and joined input sequence.
+        Sequence of reversals of the concatenated sequences.
     """
-    R = reversals.copy()
-    dRstart, dRend, dRjoin = R[1] - R[0], R[-1] - R[-2], R[0] - R[-1]
+    R1, R2 = reversals1, reversals2
+    dRstart, dRend, dRjoin = R2[1] - R2[0], R1[-1] - R1[-2], R2[0] - R1[-1]
     t1, t2 = dRend*dRstart, dRend*dRjoin
     if (t1 > 0) and (t2 < 0):
-        result = (R, R)
+        result = (R1, R2)
     elif (t1 > 0) and (t2 >= 0):
-        result = (R[:-1], R[1:])
+        result = (R1[:-1], R2[1:])
     elif (t1 < 0) and (t2 >= 0):
-        result = (R, R[1:])
+        result = (R1, R2[1:])
     elif (t1 < 0) and (t2 < 0):
-        result = (R[:-1], R)
+        result = (R1[:-1], R2)
     return np.concatenate(result)
 
 
-def get_rainflow_cycles(reversals):
-    """Return the rainflow cycles and residual from a sequence of reversals.
+def find_rainflow_cycles(reversals):
+    """Return the rainflow cycles and residue from a sequence of reversals.
 
     Arguments
     ---------
@@ -143,30 +149,29 @@ def get_rainflow_cycles(reversals):
         A (Nx2)-array where the first / second column contains the
         starting / destination point of a rainflow cycle.
     """
-    input_array = reversals.copy()
-    output_array = np.zeros((len(input_array), 2), np.double)
+    output_array = np.zeros((len(reversals), 2), np.double)
     ix_output_array = 0
 
-    residual = []
-    for n, reversal in enumerate(input_array):
-        residual.append(reversal)
-        while len(residual) >= 4:
-            S0, S1, S2, S3 = residual[-4], residual[-3], residual[-2], residual[-1]
+    residue = []
+    for n, reversal in enumerate(reversals):
+        residue.append(reversal)
+        while len(residue) >= 4:
+            S0, S1, S2, S3 = residue[-4], residue[-3], residue[-2], residue[-1]
             dS1, dS2, dS3 = np.abs(S1-S0), np.abs(S2-S1), np.abs(S3-S2)
 
             if (dS2 <= dS1) and (dS2 <= dS3):
                 output_array[ix_output_array] = [S1, S2]
                 ix_output_array += 1
-                residual.pop(-3)
-                residual.pop(-2)
+                residue.pop(-3)
+                residue.pop(-2)
             else:
                 break
 
     output_array = output_array[:ix_output_array]
-    return output_array, np.array(residual)
+    return output_array, np.array(residue)
 
 
-def get_rainflow_matrix(cycles, rowbins, colbins):
+def find_rainflow_matrix(cycles, rowbins, colbins):
     """Return the rainflowmatrix
 
     The classification includes the smallest bin edge, i.e if the bins are
@@ -219,12 +224,14 @@ def get_rainflow_matrix(cycles, rowbins, colbins):
     return mat
 
 
-def get_rainflow_ranges(y, k=64):
-    """Returns the ranges of the complete series (incl. open cycle sequence)
+def find_rainflow_ranges(y, k=64):
+    """Returns the ranges of the complete series (incl. residue)
 
     Returns the ranges by first determining the reversals of the dataseries
-    `y` classified into `k` loaded classes, then the cycles and residual
-    are found
+    `y` classified into `k` loaded classes, then the cycles and residue
+    of the complete series are found by concatenating the residue after the
+    first pass of the rainflow algorithm and applying the algorithm a second
+    time.
 
     Arguments
     ---------
@@ -239,30 +246,22 @@ def get_rainflow_ranges(y, k=64):
     ranges : ndarray
         The ranges identified by the rainflow algorithm in the dataseries.
     """
-    reversals, __ = get_reversals(y, k)
-    cycles_firstpass, residual = get_rainflow_cycles(reversals)
-    processed_residual = duplicate_reversals(residual)
-    cycles_open_sequence, _ = get_rainflow_cycles(processed_residual)
+    reversals, __ = find_reversals(y, k)
+    cycles_firstpass, residue = find_rainflow_cycles(reversals)
+    processed_residue = concatenate_reversals(residue, residue)
+    cycles_open_sequence, _ = find_rainflow_cycles(processed_residue)
     cycles = np.concatenate((cycles_firstpass, cycles_open_sequence))
     ranges = np.abs(cycles[:, 1] - cycles[:, 0])
     return ranges
 
 
-if __name__ == "__main__":
-    import unittest
-    from tests import testsuite
-
-    runner = unittest.TextTestRunner()
-    runner.run(testsuite())
-
-
-def get_range_count(y, bins=10, weights=None):
+def find_range_count(ranges, bins=10, weights=None):
     """Return count and the values ranges (midpoint of bin).
 
     Arguments
     ---------
-    y : ndarray
-        Array with the values where the
+    ranges : ndarray
+        Array with the values to be counted
     bins : Optional[ndarray,int]
         If bins is a sequence, the values are treated as the left edges (and
         the rightmost edge) of the bins.
@@ -277,7 +276,14 @@ def get_range_count(y, bins=10, weights=None):
     N, S : ndarray
         The count and the characteristic value for the range.
     """
-    N, bns = np.histogram(y, bins=bins, weights=weights)
-    dbns = np.diff(bns)
-    S = bns[:-1] - dbns / 2.
+    N, bns = np.histogram(ranges, bins=bins, weights=weights)
+    S = bns[:-1] + np.diff(bns) / 2.
     return N, S
+
+
+if __name__ == "__main__":
+    import unittest
+    from tests import testsuite
+
+    runner = unittest.TextTestRunner()
+    runner.run(testsuite())
