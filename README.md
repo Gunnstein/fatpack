@@ -23,10 +23,9 @@ The package includes modules for:
 
 - Rainflow counting
 
-An example is included (example.py) which extracts rainflow cycles and ranges from a signal. 
+An example is included (example.py) which extracts rainflow cycles and plots figure presented below. 
 
-
-![Image from example.py](example.png)
+![Figure from example.py](example.png)
 
 ## Support
 

@@ -7,6 +7,7 @@ roughly follows the terminology and implementation presented in
      fatigue testing`
 """
 import numpy as np
+import warnings
 
 
 def get_load_classes(y, k=64):
@@ -165,6 +166,11 @@ def get_rainflow_cycles(reversals):
 def get_rainflow_matrix(cycles, rowbins, colbins):
     """Return the rainflowmatrix
 
+    The classification includes the smallest bin edge, i.e if the bins are
+    strictly increasing, bin_i < bin_i+1, and the classification of value x is
+    `bin_i <= x < bin_i+1` for all bins except the rightmost bin. Cycles lying
+    **on** the rightmost bin edge are included in the last bin, .
+
     Arguments
     ---------
     cycles : ndarray
@@ -174,8 +180,9 @@ def get_rainflow_matrix(cycles, rowbins, colbins):
 
     rowbins, colbins : ndarray
         The edges of the bins for classifying the cycles into the rainflow
-        matrix. These arrays must be monotonic. The classification includes
-        the smallest bin edge.
+        matrix. These arrays must be monotonic.
+
+        Cycle values outside the range of the bins are ignored.
 
     Returns
     -------
@@ -187,10 +194,24 @@ def get_rainflow_matrix(cycles, rowbins, colbins):
     ValueError
         If rowbins or colbins are not monotonic.
     """
-    mat = np.zeros((rowbins.size, colbins.size), dtype=np.float)
-    nrows = np.digitize(cycles[:, 0], rowbins)-1
-    ncols = np.digitize(cycles[:, 1], colbins)-1
+    cc = cycles
+
+    mat = np.zeros((rowbins.size-1, colbins.size-1), dtype=np.float)
+    (N, M) = mat.shape
+
+    # Find bin index of each of the cycles
+    nrows = np.digitize(cc[:, 0], rowbins)-1
+    ncols = np.digitize(cc[:, 1], colbins)-1
+
+    # Include values on the rightmost edge in the last bin
+    nrows[cc[:, 0] == rowbins[-1]] = N - 1
+    ncols[cc[:, 1] == colbins[-1]] = M - 1
+
+    # Build the rainflow matrix
+
     for nr, nc in zip(nrows, ncols):
+        if (nr >= N) or (nr < 0) or (nc >= M) or (nc < 0):
+            continue
         mat[nr, nc] += 1.
     return mat
 

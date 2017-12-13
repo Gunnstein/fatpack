@@ -4,3 +4,4 @@ alternatives.py
 *.pyc
 data.txt
 /literature
+/build

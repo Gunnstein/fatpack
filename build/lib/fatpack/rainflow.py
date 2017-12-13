@@ -7,6 +7,7 @@ roughly follows the terminology and implementation presented in
      fatigue testing`
 """
 import numpy as np
+import warnings
 
 
 def get_load_classes(y, k=64):
@@ -165,6 +166,11 @@ def get_rainflow_cycles(reversals):
 def get_rainflow_matrix(cycles, rowbins, colbins):
     """Return the rainflowmatrix
 
+    The classification includes the smallest bin edge, i.e if the bins are
+    strictly increasing, bin_i < bin_i+1, and the classification of value x is
+    `bin_i <= x < bin_i+1` for all bins except the rightmost bin. Cycles lying
+    **on** the rightmost bin edge are included in the last bin, .
+
     Arguments
     ---------
     cycles : ndarray
@@ -174,8 +180,9 @@ def get_rainflow_matrix(cycles, rowbins, colbins):
 
     rowbins, colbins : ndarray
         The edges of the bins for classifying the cycles into the rainflow
-        matrix. These arrays must be monotonic. The classification includes
-        the smallest bin edge.
+        matrix. These arrays must be monotonic.
+
+        Cycle values outside the range of the bins are ignored.
 
     Returns
     -------
@@ -187,10 +194,24 @@ def get_rainflow_matrix(cycles, rowbins, colbins):
     ValueError
         If rowbins or colbins are not monotonic.
     """
+    cc = cycles
+
     mat = np.zeros((rowbins.size-1, colbins.size-1), dtype=np.float)
-    nrows = np.digitize(cycles[:, 0], rowbins)-1
-    ncols = np.digitize(cycles[:, 1], colbins)-1
+    (N, M) = mat.shape
+
+    # Find bin index of each of the cycles
+    nrows = np.digitize(cc[:, 0], rowbins)-1
+    ncols = np.digitize(cc[:, 1], colbins)-1
+
+    # Include values on the rightmost edge in the last bin
+    nrows[cc[:, 0] == rowbins[-1]] = N - 1
+    ncols[cc[:, 1] == colbins[-1]] = M - 1
+
+    # Build the rainflow matrix
+
     for nr, nc in zip(nrows, ncols):
+        if (nr >= N) or (nr < 0) or (nc >= M) or (nc < 0):
+            continue
         mat[nr, nc] += 1.
     return mat
 
@@ -230,3 +251,30 @@ if __name__ == "__main__":
 
     runner = unittest.TextTestRunner()
     runner.run(testsuite())
+
+
+def get_range_count(y, bins=10, weights=None):
+    """Return count and the values ranges (midpoint of bin).
+
+    Arguments
+    ---------
+    y : ndarray
+        Array with the values where the
+    bins : Optional[ndarray,int]
+        If bins is a sequence, the values are treated as the left edges (and
+        the rightmost edge) of the bins.
+        if bins is an int, a sequence is created diving the range `min`--`max`
+        of y into `bin` number of equally sized bins.
+    weights : Optional[ndarray]
+        Array with same size as y, can be used to account for half cycles, i.e
+        applying a weight of 0.5 to a value in yields a counting value of 0.5
+
+    Returns
+    -------
+    N, S : ndarray
+        The count and the characteristic value for the range.
+    """
+    N, bns = np.histogram(y, bins=bins, weights=weights)
+    dbns = np.diff(bns)
+    S = bns[:-1] - dbns / 2.
+    return N, S
