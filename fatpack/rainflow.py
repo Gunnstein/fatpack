@@ -9,6 +9,9 @@ roughly follows the terminology and implementation presented in
 import numpy as np
 import warnings
 
+__all__ = ["get_reversals", "get_rainflow_cycles", "get_rainflow_matrix",
+           "get_rainflow_ranges", "get_range_count", "duplicate_reversals"]
+
 
 def get_load_classes(y, k=64):
     ymax, ymin = y.max(), y.min()

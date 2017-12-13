@@ -5,3 +5,5 @@ alternatives.py
 data.txt
 /literature
 /build
+/fatpack.egg*
+/dist
