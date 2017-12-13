@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import numpy as np
 import unittest
-from rainflow import *
+import rainflow
 
 TESTDATA = dict(
             dataseries  = np.array([
@@ -65,13 +65,13 @@ class FindReversalsTests(BaseArrayTestCase):
     def setUp(self):
         self.result_true = TESTDATA['reversals']
         y = TESTDATA['dataseries']
-        self.result, __ = get_reversals(y, k=11)
+        self.result, __ = rainflow.get_reversals(y, k=11)
 
 
 class DuplicateOpenCycleSequenceTests(BaseArrayTestCase):
     def setUp(self):
         self.result_true = TESTDATA['duplicated_residue']
-        self.result = duplicate_reversals(TESTDATA['residue'])
+        self.result = rainflow.duplicate_reversals(TESTDATA['residue'])
 
 
 class GetRainflowCyclesTests(unittest.TestCase):
@@ -79,7 +79,8 @@ class GetRainflowCyclesTests(unittest.TestCase):
         self.cycles_true = TESTDATA['cycles']
         self.residue_true = TESTDATA['residue']
         self.reversals = TESTDATA['reversals']
-        self.cycles, self.residue = get_rainflow_cycles(self.reversals)
+        self.cycles, self.residue = rainflow.get_rainflow_cycles(
+                                                            self.reversals)
         self.result = self.cycles
         self.result_true = self.cycles_true
 
@@ -100,14 +101,14 @@ class GetLoadClassesTests(BaseArrayTestCase):
     def setUp(self):
         self.result_true = TESTDATA['classes']
         y = TESTDATA['dataseries']
-        self.result = get_load_classes(y, k=11)
+        self.result = rainflow.get_load_classes(y, k=11)
 
 
 class GetLoadClassBoundariesTests(BaseArrayTestCase):
     def setUp(self):
         self.result_true = TESTDATA['class_boundaries']
         y = TESTDATA['dataseries']
-        self.result = get_load_class_boundaries(y, k=11)
+        self.result = rainflow.get_load_class_boundaries(y, k=11)
 
 
 class GetRainflowMatrixTests(BaseArrayTestCase):
@@ -115,7 +116,7 @@ class GetRainflowMatrixTests(BaseArrayTestCase):
         self.result_true = TESTDATA['starting_destination_rainflow_matrix']
         cycles = TESTDATA['cycles']
         bins = TESTDATA['class_boundaries']
-        self.result = get_rainflow_matrix(cycles, bins, bins)
+        self.result = rainflow.get_rainflow_matrix(cycles, bins, bins)
 
 
 def testsuite():
