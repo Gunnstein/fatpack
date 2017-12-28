@@ -29,8 +29,8 @@ An example is included (example.py) which extracts rainflow cycles and plots the
 
 ## Support
 
-Please [open an issue](https://github.com/gunnstein/fatigue-analysis/issues/new) for support.
+Please [open an issue](https://github.com/Gunnstein/FatPACK/issues/new) for support.
 
 ## Contributing
 
-Please contribute using [Github Flow](https://guides.github.com/introduction/flow/). Create a branch, add commits, and [open a pull request](https://github.com/fraction/readme-boilerplate/compare/).
+Please contribute using [Github Flow](https://guides.github.com/introduction/flow/). Create a branch, add commits, and [open a pull request](https://github.com/Gunnstein/FatPACK/compare/).
