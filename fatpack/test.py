@@ -3,6 +3,7 @@ import numpy as np
 import unittest
 import rainflow
 
+
 TESTDATA = dict(
             dataseries  = np.array([
                                 4.2,  7.3,  2.0,  9.8,  9.6, 10.3,  5.2,  8.5,
@@ -56,7 +57,7 @@ TESTDATA = dict(
    )
 
 
-class BaseArrayTestCase(unittest.TestCase):
+class BaseArrayTestCase:
     def test_array_equal(self):
         np.testing.assert_array_equal(self.result, self.result_true)
 
@@ -64,21 +65,21 @@ class BaseArrayTestCase(unittest.TestCase):
         np.testing.assert_allclose(self.result, self.result_true)
 
 
-class FindReversalsTests(BaseArrayTestCase):
+class TestFindReversalsStrict(BaseArrayTestCase, unittest.TestCase):
     def setUp(self):
         self.result_true = TESTDATA['reversals']
         y = TESTDATA['dataseries']
-        self.result, __ = rainflow.find_reversals(y, k=11)
+        self.result, __ = rainflow.find_reversals_strict(y, k=11)
 
 
-class ConcatenateResidueTests(BaseArrayTestCase):
+class TestConcatenateResidue(BaseArrayTestCase, unittest.TestCase):
     def setUp(self):
         self.result_true = TESTDATA['concatenated_residue']
         residue = TESTDATA['residue']
         self.result = rainflow.concatenate_reversals(residue, residue)
 
 
-class FindRainflowCyclesTests(unittest.TestCase):
+class TestFindRainflowCycles(unittest.TestCase):
     def setUp(self):
         self.cycles_true = TESTDATA['cycles']
         self.residue_true = TESTDATA['residue']
@@ -101,21 +102,21 @@ class FindRainflowCyclesTests(unittest.TestCase):
         np.testing.assert_array_equal(self.residue, self.residue_true)
 
 
-class GetLoadClassesTests(BaseArrayTestCase):
+class TestGetLoadClasses(BaseArrayTestCase, unittest.TestCase):
     def setUp(self):
         self.result_true = TESTDATA['classes']
         y = TESTDATA['dataseries']
         self.result = rainflow.get_load_classes(y, k=11)
 
 
-class GetLoadClassBoundariesTests(BaseArrayTestCase):
+class TestGetLoadClassBoundaries(BaseArrayTestCase, unittest.TestCase):
     def setUp(self):
         self.result_true = TESTDATA['class_boundaries']
         y = TESTDATA['dataseries']
         self.result = rainflow.get_load_class_boundaries(y, k=11)
 
 
-class FindRainflowMatrixTests(BaseArrayTestCase):
+class TestFindRainflowMatrix(BaseArrayTestCase, unittest.TestCase):
     def setUp(self):
         self.result_true = TESTDATA['starting_destination_rainflow_matrix']
         cycles = TESTDATA['cycles']
@@ -123,13 +124,14 @@ class FindRainflowMatrixTests(BaseArrayTestCase):
         self.result = rainflow.find_rainflow_matrix(cycles, bins, bins)
 
 
-class FindRainflowRangesTests(BaseArrayTestCase):
+class TestFindRainflowRangesStrict(BaseArrayTestCase, unittest.TestCase):
     def setUp(self):
         self.result_true = TESTDATA['ranges_total']
-        self.result = rainflow.find_rainflow_ranges(TESTDATA['dataseries'],
-                                                    k=11)
+        self.result = rainflow.find_rainflow_ranges_strict(
+                                                TESTDATA['dataseries'], k=11)
 
-class FindRangeCountTests(BaseArrayTestCase):
+
+class TestFindRangeCount(unittest.TestCase):
     def setUp(self):
         self.N_true = TESTDATA['ranges_count']
         self.S_true = TESTDATA['classes']
@@ -150,27 +152,21 @@ class FindRangeCountTests(BaseArrayTestCase):
         np.testing.assert_allclose(self.S, self.S_true)
 
 
-def testsuite():
-    suite = unittest.TestSuite()
-    for Tests in [FindReversalsTests, ConcatenateResidueTests,
-                  GetLoadClassesTests, GetLoadClassBoundariesTests,
-                  FindRainflowMatrixTests, FindRainflowRangesTests]:
-        for f in ['test_array_equal', 'test_allclose']:
-            suite.addTest(Tests(f))
-    suite.addTest(FindRainflowCyclesTests('test_cycles_allclose'))
-    suite.addTest(FindRainflowCyclesTests('test_cycles_array_equal'))
-    suite.addTest(FindRainflowCyclesTests('test_residue_allclose'))
-    suite.addTest(FindRainflowCyclesTests('test_residue_array_equal'))
-    suite.addTest(FindRangeCountTests('test_count_allclose'))
-    suite.addTest(FindRangeCountTests('test_count_array_equal'))
-    suite.addTest(FindRangeCountTests('test_class_allclose'))
-    suite.addTest(FindRangeCountTests('test_class_array_equal'))
-    return suite
+class TestFindReversals(unittest.TestCase):
+    def setUp(self):
+        y = np.cos(2*np.pi*3.*np.arange(0, 1.01, .01)) * 25.
+        self.reversal_est, self.index_est = rainflow.find_reversals(y)
+        self.reversal_true = np.array(
+            [25., -25.,  25., -25.,  25., -25.,  25.])
+        self.index_true = np.array(
+            [0,  17,  34,  50,  67,  84, 100])
+
+    def test_index(self):
+        np.testing.assert_allclose(self.index_est, self.index_true)
+
+    def test_reversal(self):
+        np.testing.assert_allclose(self.reversal_est, self.reversal_true)
 
 
 if __name__ == "__main__":
-    from time import time
-    runner = unittest.TextTestRunner()
-    runner.run(testsuite())
-
-
+    unittest.main()

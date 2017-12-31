@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Implementation a 4-point rainflow counting algorithm in numpy. The
+Implementation of 4-point rainflow counting algorithm in numpy. The
 implementation and terminology is based off on the following resources:
 
     `C. Amzallag et. al. Standardization of the rainflow counting method for
@@ -12,6 +12,17 @@ implementation and terminology is based off on the following resources:
     `G. Marsh et. al. Review and application of Rainflow residue processing
     techniques for accurate fatigue damage estimation. International Journal
     of Fatigue, 82 (2016) 757-765`
+
+Note that there are two functions for finding the reversals.
+
+    * `find_reversals_strict` passes the example provided in ISO12110-2 by
+    ensuring that data points which fall on a load class boundary are rounded
+    upwards if the reversal is a peak and downwards if it is a valley.
+
+    * `find_reversals` classifies the data points by rounding the datapoints
+    which lies on the boundary to the upper load class. This function is more
+    efficient than the strict version, and yields practically identical results
+    if the number of load classes is set sufficiently high.
 """
 import numpy as np
 
@@ -31,12 +42,16 @@ def get_load_class_boundaries(y, k=64):
     return np.linspace(Y.min()-dY/2., Y.max()+dY/2., k+2)
 
 
-def find_reversals(y, k=64):
+def find_reversals_strict(y, k=64):
     """Return reversals (peaks and valleys) and indices of reversals in `y`.
 
     The data points in the dataseries `y` are classified into `k` constant
     sized intervals and then peak-valley filtered to yield the successive
     extremas of the dataseries `y`.
+
+    The function is strict in the sense that data points which fall on a load
+    class boundary are rounded upwards if the reversal is a peak and downwards
+    to the closest load class if it is a valley.
 
     Arguments
     ---------
@@ -100,6 +115,51 @@ def find_reversals(y, k=64):
     else:
         revix.append(ix[-1])
 
+    return y[revix], np.array(revix)
+
+
+def find_reversals(y, k=64):
+    """Return reversals (peaks and valleys) and indices of reversals in `y`.
+
+    The data points in the dataseries `y` are classified into `k` constant
+    sized intervals and then peak-valley filtered to yield the successive
+    extremas of the dataseries `y`.
+
+    Arguments
+    ---------
+    y : ndarray
+        Dataseries containing the signal to find the reversals for.
+    k : int
+        The number of intervals to divide the min-max range of the dataseries
+        into.
+
+    Returns
+    -------
+    reversals : ndarray
+        The reversals of the initial data series `y`.
+    indices : ndarray
+        The indices of the initial data series `y` which corresponds to the
+        reversals.
+    """
+    y = y.copy()  # Make sure we do not change the original sequence
+    sgn = np.sign
+    Y = get_load_class_boundaries(y, k)
+
+    # Classifying points into levels
+    for yl, yu in zip(Y[:-1], Y[1:]):
+        y[(yl <= y) & (y < yu)] = (yl+yu) / 2.
+    y[y == yu] = (yl + yu) / 2.
+
+    # Find successive datapoints in each class
+    dy = np.diff(y)
+    ix = np.argwhere(dy != 0.).ravel()
+    ix = np.append(ix, (ix[-1]+1))
+    dy1, dy2 = np.diff(y[ix][:-1]), np.diff(y[ix][1:])
+    dy = dy1 * dy2
+    revix = ix[np.argwhere(dy < 0.).ravel()+1]
+    revix = np.insert(revix, (0), ix[0])
+    if (y[revix[-1]]-y[revix[-2]])*(y[ix[-1]] - y[revix[-1]]) < 0.:
+        revix = np.append(revix, ix[-1])
     return y[revix], np.array(revix)
 
 
@@ -255,6 +315,37 @@ def find_rainflow_ranges(y, k=64):
     return ranges
 
 
+def find_rainflow_ranges_strict(y, k=64):
+    """Returns the ranges of the complete series (incl. residue)
+
+    Returns the ranges by first determining the reversals of the dataseries
+    `y` classified into `k` loaded classes, then the cycles and residue
+    of the complete series are found by concatenating the residue after the
+    first pass of the rainflow algorithm and applying the algorithm a second
+    time.
+
+    Arguments
+    ---------
+    y : ndarray
+        Dataseries containing the signal to find the reversals for.
+    k : int
+        The number of intervals to divide the min-max range of the dataseries
+        into.
+
+    Returns
+    -------
+    ranges : ndarray
+        The ranges identified by the rainflow algorithm in the dataseries.
+    """
+    reversals, __ = find_reversals_strict(y, k)
+    cycles_firstpass, residue = find_rainflow_cycles(reversals)
+    processed_residue = concatenate_reversals(residue, residue)
+    cycles_open_sequence, _ = find_rainflow_cycles(processed_residue)
+    cycles = np.concatenate((cycles_firstpass, cycles_open_sequence))
+    ranges = np.abs(cycles[:, 1] - cycles[:, 0])
+    return ranges
+
+
 def find_range_count(ranges, bins=10, weights=None):
     """Return count and the values ranges (midpoint of bin).
 
@@ -279,11 +370,3 @@ def find_range_count(ranges, bins=10, weights=None):
     N, bns = np.histogram(ranges, bins=bins, weights=weights)
     S = bns[:-1] + np.diff(bns) / 2.
     return N, S
-
-
-if __name__ == "__main__":
-    import unittest
-    from tests import testsuite
-
-    runner = unittest.TextTestRunner()
-    runner.run(testsuite())
