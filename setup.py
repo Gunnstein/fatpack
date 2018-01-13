@@ -2,7 +2,7 @@
 from setuptools import setup
 
 setup(name='fatpack',
-      version='0.3',
+      version='0.4',
       url='https://github.com/Gunnstein/FatPACK',
       license='MIT License',
       description='Package for fatigue analysis, FatPACK',

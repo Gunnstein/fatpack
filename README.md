@@ -23,6 +23,7 @@ Download the repository to your computer and install the package with the setup.
 The package includes modules for:
 
 - Rainflow counting
+- Endurance curves
 
 An example is included (example.py) which extracts rainflow cycles and plots the figure presented below. The example is a good place to start to get into the use of the package.
 
