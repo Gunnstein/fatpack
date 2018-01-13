@@ -2,7 +2,7 @@
 import numpy as np
 import unittest
 import rainflow
-
+from endurance import *
 
 TESTDATA = dict(
             dataseries  = np.array([
@@ -166,6 +166,28 @@ class TestFindReversals(unittest.TestCase):
 
     def test_reversal(self):
         np.testing.assert_allclose(self.reversal_est, self.reversal_true)
+
+
+class TestEndurance(unittest.TestCase):
+    def test_get_basquin_constant(self):
+        self.assertEqual(8.192e+12, get_basquin_constant(160., 2.e6, 3.))
+
+    def test_get_basquin_endurance(self):
+        self.assertEqual(2e6, get_basquin_endurance(160., 160., 2.e6, 3.))
+
+    def test_get_basquin_stress(self):
+        self.assertAlmostEqual(160., get_basquin_stress(2e6, 160., 2e6, 5))
+
+    def test_get_cutoff_stress(self):
+        Sd, Sl = get_cutoff_stress(160., Nc=2e6, m1=3., Nd=5e6, m2=5., Nl=1e8)
+        self.assertEqual(117.88900795649238, Sd)
+        self.assertEqual(64.75410631525175, Sl)
+
+    def test_get_bilinear_endurance(self):
+        N = get_bilinear_endurance([160., (2./5.)**(1./3.)*160., 20.], 160.,
+                                   Nc=2e6, m1=3., Nd=5e6, m2=5., Nl=1e8)
+        for f, s in zip(N, [2e6, 5e6, 1e32]):
+            self.assertEqual(f, s)
 
 
 if __name__ == "__main__":

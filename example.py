@@ -23,11 +23,11 @@ ranges = np.abs(cycles_total[:, 1] - cycles_total[:, 0])
 # by the wrapper function `find_rainflow_ranges`, i.e
 # ranges = fatpack.find_rainflow_ranges(y)
 
-figsize = np.array([140., 70.]) / 25.
+figsize = np.array([140., 140.]) / 25.
 fig = plt.figure(dpi=300, figsize=figsize)
 
 # Plotting signal with reversals.
-ax_signal = plt.subplot2grid((2, 2), (0, 0))
+ax_signal = plt.subplot2grid((3, 2), (0, 0))
 ax_signal.plot(y)
 ax_signal.plot(reversals_ix, y[reversals_ix], 'ro', fillstyle='none',
                label='reversal')
@@ -35,7 +35,7 @@ ax_signal.legend()
 ax_signal.set(title="Signal", ylabel="y", xlabel="Index", xlim=[400, 500])
 
 # Plotting the cumulative distribution of the cycle count
-ax_cumdist = plt.subplot2grid((2, 2), (1, 0))
+ax_cumdist = plt.subplot2grid((3, 2), (1, 0))
 N, S = fatpack.find_range_count(ranges, 64)
 Ncum = N.sum() - np.cumsum(N)
 ax_cumdist.semilogx(Ncum, S)
@@ -43,7 +43,7 @@ ax_cumdist.set(title="Cumulative distribution, rainflow ranges",
                xlabel="Count, N", ylabel="Range, S")
 
 # Plotting the rainflow matrix of the total cycle count
-ax_rfcmat = plt.subplot2grid((2, 2), (0, 1), rowspan=2, aspect='equal')
+ax_rfcmat = plt.subplot2grid((3, 2), (0, 1), rowspan=2, aspect='equal')
 bins = np.linspace(cycles_total.min(), cycles_total.max(), 64)
 rfcmat = fatpack.find_rainflow_matrix(cycles_total, bins, bins)
 X, Y = np.meshgrid(bins, bins, indexing='ij')
@@ -51,6 +51,17 @@ C = ax_rfcmat.pcolormesh(X, Y, rfcmat, cmap='magma')
 fig.colorbar(C)
 ax_rfcmat.set(title="Rainflow matrix",
               xlabel="Starting point", ylabel="Destination point")
+
+# Let us also get the EC3 endurance curve for detail category 160 and plot it.
+ax = plt.subplot2grid((3, 2), (2, 0), colspan=2,)
+S = np.logspace(1., 3., 1000)
+N = fatpack.get_bilinear_endurance(S, 160.)
+ax.loglog(N, S)
+ax.set(xlim=(1e4, 2e8), ylim=(1., 1000),
+       title="Endurance curve, detail category 160 Mpa",
+       xlabel="Endurance [1]", ylabel="Stress Range [Mpa]")
+ax.grid()
+ax.grid(which='both')
 fig.tight_layout()
 fig.savefig('example.png', figsize=figsize, dpi=300)
 plt.show(block=True)
