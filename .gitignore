@@ -7,3 +7,5 @@ data.txt
 /build
 /fatpack.egg*
 /dist
+/.eggs
+/venv*

@@ -2,7 +2,7 @@
 from setuptools import setup
 
 setup(name='fatpack',
-      version='0.4',
+      version='0.5',
       url='https://github.com/Gunnstein/FatPACK',
       license='MIT License',
       description='Package for fatigue analysis, FatPACK',
@@ -10,5 +10,5 @@ setup(name='fatpack',
       author_email='gunnstein.t.froseth@ntnu.no',
       packages=['fatpack'],
       install_requires=[
-        'numpy>=1.0']
+        'numpy']
      )
