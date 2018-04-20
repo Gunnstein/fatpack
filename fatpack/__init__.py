@@ -1,3 +1,5 @@
 # -*- coding: utf-8 -*-
-from rainflow import *
-from endurance import *
+from __future__ import (division, print_function, absolute_import,
+                        unicode_literals)
+from .rainflow import *
+from .endurance import *

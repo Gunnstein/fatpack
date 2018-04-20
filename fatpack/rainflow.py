@@ -24,6 +24,8 @@ Note that there are two functions for finding the reversals.
     efficient than the strict version, and yields practically identical results
     if the number of load classes is set sufficiently high.
 """
+from __future__ import (division, print_function, absolute_import,
+                        unicode_literals)
 import numpy as np
 
 __all__ = ["find_reversals", "find_rainflow_cycles", "find_rainflow_matrix",

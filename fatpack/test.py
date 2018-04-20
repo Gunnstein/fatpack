@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
+from __future__ import (division, print_function, absolute_import,
+                        unicode_literals)
 import numpy as np
 import unittest
-import rainflow
-from endurance import *
+from .rainflow import (get_load_classes, get_load_class_boundaries,
+                       find_reversals_strict, find_rainflow_ranges_strict)
+from . import *
 
 TESTDATA = dict(
             dataseries  = np.array([
@@ -69,14 +72,14 @@ class TestFindReversalsStrict(BaseArrayTestCase, unittest.TestCase):
     def setUp(self):
         self.result_true = TESTDATA['reversals']
         y = TESTDATA['dataseries']
-        self.result, __ = rainflow.find_reversals_strict(y, k=11)
+        self.result, __ = find_reversals_strict(y, k=11)
 
 
 class TestConcatenateResidue(BaseArrayTestCase, unittest.TestCase):
     def setUp(self):
         self.result_true = TESTDATA['concatenated_residue']
         residue = TESTDATA['residue']
-        self.result = rainflow.concatenate_reversals(residue, residue)
+        self.result = concatenate_reversals(residue, residue)
 
 
 class TestFindRainflowCycles(unittest.TestCase):
@@ -84,7 +87,7 @@ class TestFindRainflowCycles(unittest.TestCase):
         self.cycles_true = TESTDATA['cycles']
         self.residue_true = TESTDATA['residue']
         self.reversals = TESTDATA['reversals']
-        self.cycles, self.residue = rainflow.find_rainflow_cycles(
+        self.cycles, self.residue = find_rainflow_cycles(
                                                             self.reversals)
         self.result = self.cycles
         self.result_true = self.cycles_true
@@ -106,14 +109,14 @@ class TestGetLoadClasses(BaseArrayTestCase, unittest.TestCase):
     def setUp(self):
         self.result_true = TESTDATA['classes']
         y = TESTDATA['dataseries']
-        self.result = rainflow.get_load_classes(y, k=11)
+        self.result = get_load_classes(y, k=11)
 
 
 class TestGetLoadClassBoundaries(BaseArrayTestCase, unittest.TestCase):
     def setUp(self):
         self.result_true = TESTDATA['class_boundaries']
         y = TESTDATA['dataseries']
-        self.result = rainflow.get_load_class_boundaries(y, k=11)
+        self.result = get_load_class_boundaries(y, k=11)
 
 
 class TestFindRainflowMatrix(BaseArrayTestCase, unittest.TestCase):
@@ -121,13 +124,13 @@ class TestFindRainflowMatrix(BaseArrayTestCase, unittest.TestCase):
         self.result_true = TESTDATA['starting_destination_rainflow_matrix']
         cycles = TESTDATA['cycles']
         bins = TESTDATA['class_boundaries']
-        self.result = rainflow.find_rainflow_matrix(cycles, bins, bins)
+        self.result = find_rainflow_matrix(cycles, bins, bins)
 
 
 class TestFindRainflowRangesStrict(BaseArrayTestCase, unittest.TestCase):
     def setUp(self):
         self.result_true = TESTDATA['ranges_total']
-        self.result = rainflow.find_rainflow_ranges_strict(
+        self.result = find_rainflow_ranges_strict(
                                                 TESTDATA['dataseries'], k=11)
 
 
@@ -135,7 +138,7 @@ class TestFindRangeCount(unittest.TestCase):
     def setUp(self):
         self.N_true = TESTDATA['ranges_count']
         self.S_true = TESTDATA['classes']
-        self.N, self.S = rainflow.find_range_count(
+        self.N, self.S = find_range_count(
                             TESTDATA['ranges_total'],
                             bins=TESTDATA['class_boundaries'])
 
@@ -155,7 +158,7 @@ class TestFindRangeCount(unittest.TestCase):
 class TestFindReversals(unittest.TestCase):
     def setUp(self):
         y = np.cos(2*np.pi*3.*np.arange(0, 1.01, .01)) * 25.
-        self.reversal_est, self.index_est = rainflow.find_reversals(y)
+        self.reversal_est, self.index_est = find_reversals(y)
         self.reversal_true = np.array(
             [25., -25.,  25., -25.,  25., -25.,  25.])
         self.index_true = np.array(
