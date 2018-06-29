@@ -210,6 +210,9 @@ def find_rainflow_cycles(reversals):
     rainflow_cycles : ndarray
         A (Nx2)-array where the first / second column contains the
         starting / destination point of a rainflow cycle.
+    residue : ndarray
+        The residue of the reversal series after one pass of the rainflow
+        algorithm.
     """
     output_array = np.zeros((len(reversals), 2), np.double)
     ix_output_array = 0
