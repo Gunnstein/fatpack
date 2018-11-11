@@ -12,10 +12,10 @@ Package for fatigue analysis (FatPACK).
 
 ## Installation
 
-Download the repository to your computer and install the package with the setup.py file. For instance, create a wheel and install by pip:
-	
-    python setup.py bdist_wheel -d dist
-    pip install dist/fatpack-X.Y.Z
+Download the repository to your computer and install the package with the setup.py file. For instance with pip:
+
+
+    pip install .
 
 
 ## Usage
