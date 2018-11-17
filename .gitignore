@@ -9,3 +9,4 @@ data.txt
 /dist
 /.eggs
 /venv*
+/notebooks

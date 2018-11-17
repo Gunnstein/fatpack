@@ -20,13 +20,14 @@ Note that there are two functions for finding the reversals.
     upwards if the reversal is a peak and downwards if it is a valley.
 
     * `find_reversals` classifies the data points by rounding the datapoints
-    which lies on the boundary to the upper load class. This function is more
+    which lies on the boundary to the lower load class. This function is more
     efficient than the strict version, and yields practically identical results
     if the number of load classes is set sufficiently high.
 """
 from __future__ import (division, print_function, absolute_import,
                         unicode_literals)
 import numpy as np
+from math import fabs
 
 __all__ = ["find_reversals", "find_rainflow_cycles", "find_rainflow_matrix",
            "find_rainflow_ranges", "find_range_count", "concatenate_reversals"]
@@ -34,14 +35,15 @@ __all__ = ["find_reversals", "find_rainflow_cycles", "find_rainflow_matrix",
 
 def get_load_classes(y, k=64):
     ymax, ymin = y.max(), y.min()
-    dY = (ymax-ymin) / float(k)
     return np.linspace(ymin, ymax, k+1)
 
 
 def get_load_class_boundaries(y, k=64):
-    Y = get_load_classes(y, k)
-    dY = Y[1] - Y[0]
-    return np.linspace(Y.min()-dY/2., Y.max()+dY/2., k+2)
+    ymin, ymax = y.min(), y.max()
+    dy = (ymax-ymin) / (2.0*k)
+    y0 = ymin - dy
+    y1 = ymax + dy
+    return np.linspace(y0, y1, k+2)
 
 
 def find_reversals_strict(y, k=64):
@@ -144,16 +146,15 @@ def find_reversals(y, k=64):
         reversals.
     """
     y = y.copy()  # Make sure we do not change the original sequence
-    sgn = np.sign
     Y = get_load_class_boundaries(y, k)
+    dY = Y[1] - Y[0]
 
     # Classifying points into levels
-    for yl, yu in zip(Y[:-1], Y[1:]):
-        y[(yl <= y) & (y < yu)] = (yl+yu) / 2.
-    y[y == yu] = (yl + yu) / 2.
+    i = np.digitize(y, Y)
+    y = Y[0] + dY/2 + (i-1) * dY
 
     # Find successive datapoints in each class
-    dy = np.diff(y)
+    dy = y[1:]-y[:-1]
     ix = np.argwhere(dy != 0.).ravel()
     ix = np.append(ix, (ix[-1]+1))
     dy1, dy2 = np.diff(y[ix][:-1]), np.diff(y[ix][1:])
@@ -214,26 +215,20 @@ def find_rainflow_cycles(reversals):
         The residue of the reversal series after one pass of the rainflow
         algorithm.
     """
-    output_array = np.zeros((len(reversals), 2), np.double)
-    ix_output_array = 0
-
+    result = []
     residue = []
-    for n, reversal in enumerate(reversals):
+    for reversal in reversals:
         residue.append(reversal)
         while len(residue) >= 4:
             S0, S1, S2, S3 = residue[-4], residue[-3], residue[-2], residue[-1]
-            dS1, dS2, dS3 = np.abs(S1-S0), np.abs(S2-S1), np.abs(S3-S2)
-
+            dS1, dS2, dS3 = fabs(S1-S0), fabs(S2-S1), fabs(S3-S2)
             if (dS2 <= dS1) and (dS2 <= dS3):
-                output_array[ix_output_array] = [S1, S2]
-                ix_output_array += 1
-                residue.pop(-3)
-                residue.pop(-2)
+                result.append([S1, S2])
+                del residue[-3]
+                del residue[-2]
             else:
                 break
-
-    output_array = output_array[:ix_output_array]
-    return output_array, np.array(residue)
+    return np.array(result), np.array(residue)
 
 
 def find_rainflow_matrix(cycles, rowbins, colbins):
