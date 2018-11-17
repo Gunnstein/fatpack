@@ -4,4 +4,4 @@ from __future__ import (division, print_function, absolute_import,
 from .rainflow import *
 from .endurance import *
 
-__version__ = "0.5.3"
+__version__ = "0.5.4"

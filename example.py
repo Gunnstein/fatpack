@@ -63,5 +63,4 @@ ax.set(xlim=(1e4, 2e8), ylim=(1., 1000),
 ax.grid()
 ax.grid(which='both')
 fig.tight_layout()
-fig.savefig('example.png', figsize=figsize, dpi=300)
 plt.show(block=True)

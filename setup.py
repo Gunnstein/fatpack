@@ -10,17 +10,25 @@ with open('fatpack/__init__.py') as f:
             version = version.strip("'")
             break
 
-with open('README.md', 'r') as fin:
+with open('README.rst', 'r') as fin:
     long_description = fin.read()
 
-setup(name='fatpack',
-      version=version,
-      url='https://github.com/Gunnstein/FatPACK',
-      license='ISC',
-      author='Gunnstein T. Frøseth',
-      author_email='gunnstein@mailbox.org',
-      description='Package for fatigue analysis, FatPACK',
-      packages=find_packages(exclude=["test"]),
-      install_requires=[
-        'numpy']
-     )
+
+setup(
+    name='fatpack',
+    version=version,
+    author='Gunnstein T. Frøseth',
+    author_email='gunnstein@mailbox.org',
+    description='Fatigue analysis in python',
+    license='ISC',
+    long_description=long_description,
+    long_description_content_type="text/x-rst",
+    url='https://github.com/gunnstein/fatpack',
+    packages=find_packages(exclude=["tests"]),
+    classifiers=[
+        "License :: OSI Approved :: ISC License (ISCL)",
+        "Operating System :: OS Independent",
+        "Programming Language :: Python",
+        "Topic :: Scientific/Engineering",
+        ],
+    install_requires=["numpy"])
