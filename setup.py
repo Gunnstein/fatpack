@@ -24,7 +24,7 @@ setup(
     long_description=long_description,
     long_description_content_type="text/x-rst",
     url='https://github.com/gunnstein/fatpack',
-    packages=find_packages(exclude=["tests"]),
+    packages=find_packages(exclude=["test"]),
     classifiers=[
         "License :: OSI Approved :: ISC License (ISCL)",
         "Operating System :: OS Independent",

@@ -172,23 +172,23 @@ class TestFindReversals(unittest.TestCase):
 
 
 class TestEndurance(unittest.TestCase):
-    def test_get_basquin_constant(self):
-        self.assertEqual(8.192e+12, get_basquin_constant(160., 2.e6, 3.))
+    def setUp(self):
+        self.crv = LinearEnduranceCurve(160.)
+        self.crv.m = 3.0
+        self.crv.Nc = 2e6
+        self.tricrv = TriLinearEnduranceCurve(160.)
 
-    def test_get_basquin_endurance(self):
-        self.assertEqual(2e6, get_basquin_endurance(160., 160., 2.e6, 3.))
+    def test_intercept_constant(self):
+        self.assertEqual(8.192e+12, self.crv.C)
 
-    def test_get_basquin_stress(self):
-        self.assertAlmostEqual(160., get_basquin_stress(2e6, 160., 2e6, 5))
+    def test_get_endurance(self):
+        self.assertEqual(2e6, self.crv.get_endurance(160.))
 
-    def test_get_cutoff_stress(self):
-        Sd, Sl = get_cutoff_stress(160., Nc=2e6, m1=3., Nd=5e6, m2=5., Nl=1e8)
-        self.assertEqual(117.88900795649238, Sd)
-        self.assertEqual(64.75410631525175, Sl)
+    def test_get_stress(self):
+        self.assertAlmostEqual(160., self.crv.get_stress(2e6))
 
     def test_get_bilinear_endurance(self):
-        N = get_bilinear_endurance([160., (2./5.)**(1./3.)*160., 20.], 160.,
-                                   Nc=2e6, m1=3., Nd=5e6, m2=5., Nl=1e8)
+        N = self.tricrv.get_endurance([160., (2./5.)**(1./3.)*160., 20.])
         for f, s in zip(N, [2e6, 5e6, 1e32]):
             self.assertEqual(f, s)
 

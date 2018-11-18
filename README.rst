@@ -1,3 +1,5 @@
+|logo_img|
+
 =======
 fatpack
 =======
@@ -38,16 +40,16 @@ code example below shows how fatigue damage can be calculated:
 
 
     # Assume that `x` is the data series, we generate one here
-    x = np.random.normal(0., 20., size=1000000)
+    x = np.random.normal(0., 30., size=10000)
 
     # Extract the stress ranges by rainflow counting
     S = fatpack.find_rainflow_ranges(x)
 
-    # Determine the fatigue damage, using a bilinear fatigue curve
+    # Determine the fatigue damage, using a trilinear fatigue curve
     # with detail category Sc, Miner's linear damage summation rule.
     Sc = 90.0
-    fatigue_damage = sum(1. / fatpack.get_bilinear_endurance(S, Sc))
-
+    curve = fatpack.TriLinearEnduranceCurve(Sc)
+    fatigue_damage = curve.find_miner_sum(S)
 
 An example is included (example.py) which extracts rainflow cycles,
 generates the rainflow matrix and rainflow stress spectrum, see the
@@ -71,6 +73,9 @@ Please contribute using `Github Flow
 <https://guides.github.com/introduction/flow/>`_.
 Create a branch, add commits, and
 `open a pull request <https://github.com/Gunnstein/fatpack/compare/>`_.
+
+.. |logo_img| image:: https://github.com/Gunnstein/fatpack/blob/master/fatpack-logo.png
+    :target: https://github.com/gunnstein/fatpack/
 
 .. |example_img| image:: https://github.com/Gunnstein/fatpack/blob/master/example.png
     :target: https://github.com/gunnstein/fatpack/
