@@ -295,8 +295,8 @@ def find_rainflow_ranges(y, k=64):
 
     Arguments
     ---------
-    y : ndarray
-        Dataseries containing the signal to find the reversals for.
+    y : 1darray
+        Dataseries to extract rainflow ranges from.
     k : int
         The number of intervals to divide the min-max range of the dataseries
         into.
@@ -305,12 +305,26 @@ def find_rainflow_ranges(y, k=64):
     -------
     ranges : ndarray
         The ranges identified by the rainflow algorithm in the dataseries.
+
+    Raises
+    ------
+    ValueError
+        If no rainflow cycles are found in the sequence.
     """
     reversals, __ = find_reversals(y, k)
     cycles_firstpass, residue = find_rainflow_cycles(reversals)
     processed_residue = concatenate_reversals(residue, residue)
     cycles_open_sequence, _ = find_rainflow_cycles(processed_residue)
-    cycles = np.concatenate((cycles_firstpass, cycles_open_sequence))
+    found_cycles_firstpass = len(cycles_firstpass.shape) == 2
+    found_cycles_open_sequence = len(cycles_open_sequence.shape) == 2
+    if found_cycles_firstpass and found_cycles_open_sequence:
+        cycles = np.concatenate((cycles_firstpass, cycles_open_sequence))
+    elif found_cycles_firstpass:
+        cycles = cycles_firstpass
+    elif found_cycles_open_sequence:
+        cycles = cycles_open_sequence
+    else:
+        raise ValueError("Could not find any cycles in sequence")
     ranges = np.abs(cycles[:, 1] - cycles[:, 0])
     return ranges
 
@@ -319,15 +333,23 @@ def find_rainflow_ranges_strict(y, k=64):
     """Returns the ranges of the complete series (incl. residue)
 
     Returns the ranges by first determining the reversals of the dataseries
-    `y` classified into `k` loaded classes, then the cycles and residue
+    `y` classified into `k` load classes, then the cycles and residue
     of the complete series are found by concatenating the residue after the
     first pass of the rainflow algorithm and applying the algorithm a second
     time.
 
+    Note that `find_rainflow_ranges_strict` uses
+    `find_reversals_strict`, which classify reversals that lie on the
+    load class boundary to the upper or lower load classes depending
+    on wether the reversal is a peak or valley. It is recommended to
+    use `find_rainflow_ranges` because it is faster than
+    `find_rainflow_ranges_strict` and finds virtually identical
+    results if `k` is sufficiently large.
+
     Arguments
     ---------
-    y : ndarray
-        Dataseries containing the signal to find the reversals for.
+    y : 1darray
+        Dataseries to extract rainflow ranges from.
     k : int
         The number of intervals to divide the min-max range of the dataseries
         into.
@@ -336,12 +358,27 @@ def find_rainflow_ranges_strict(y, k=64):
     -------
     ranges : ndarray
         The ranges identified by the rainflow algorithm in the dataseries.
+
+    Raises
+    ------
+    ValueError
+        If no rainflow cycles are found in the sequence.
+
     """
     reversals, __ = find_reversals_strict(y, k)
     cycles_firstpass, residue = find_rainflow_cycles(reversals)
     processed_residue = concatenate_reversals(residue, residue)
     cycles_open_sequence, _ = find_rainflow_cycles(processed_residue)
-    cycles = np.concatenate((cycles_firstpass, cycles_open_sequence))
+    found_cycles_firstpass = len(cycles_firstpass.shape) == 2
+    found_cycles_open_sequence = len(cycles_open_sequence.shape) == 2
+    if found_cycles_firstpass and found_cycles_open_sequence:
+        cycles = np.concatenate((cycles_firstpass, cycles_open_sequence))
+    elif found_cycles_firstpass:
+        cycles = cycles_firstpass
+    elif found_cycles_open_sequence:
+        cycles = cycles_open_sequence
+    else:
+        raise ValueError("Could not find any cycles in sequence")
     ranges = np.abs(cycles[:, 1] - cycles[:, 0])
     return ranges
 
