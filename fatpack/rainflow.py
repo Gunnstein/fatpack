@@ -145,25 +145,24 @@ def find_reversals(y, k=64):
         The indices of the initial data series `y` which corresponds to the
         reversals.
     """
-    y = y.copy()  # Make sure we do not change the original sequence
     Y = get_load_class_boundaries(y, k)
     dY = Y[1] - Y[0]
 
     # Classifying points into levels
     i = np.digitize(y, Y)
-    y = Y[0] + dY/2 + (i-1) * dY
+    z = Y[0] + dY/2. + (i-1) * dY
 
     # Find successive datapoints in each class
-    dy = y[1:]-y[:-1]
-    ix = np.argwhere(dy != 0.).ravel()
+    dz = z[1:]-z[:-1]
+    ix = np.argwhere(dz != 0.).ravel()
     ix = np.append(ix, (ix[-1]+1))
-    dy1, dy2 = np.diff(y[ix][:-1]), np.diff(y[ix][1:])
-    dy = dy1 * dy2
-    revix = ix[np.argwhere(dy < 0.).ravel()+1]
+    dz1, dz2 = np.diff(z[ix][:-1]), np.diff(z[ix][1:])
+    dz = dz1 * dz2
+    revix = ix[np.argwhere(dz < 0.).ravel()+1]
     revix = np.insert(revix, (0), ix[0])
-    if (y[revix[-1]]-y[revix[-2]])*(y[ix[-1]] - y[revix[-1]]) < 0.:
+    if (z[revix[-1]] - z[revix[-2]])*(z[ix[-1]] - z[revix[-1]]) < 0.:
         revix = np.append(revix, ix[-1])
-    return y[revix], np.array(revix)
+    return z[revix], np.array(revix)
 
 
 def concatenate_reversals(reversals1, reversals2):
@@ -217,15 +216,18 @@ def find_rainflow_cycles(reversals):
     """
     result = []
     residue = []
+    len_residue = 0
     for reversal in reversals:
-        residue.append(reversal)
-        while len(residue) >= 4:
+        residue += [reversal]
+        len_residue += 1
+        while len_residue >= 4:
             S0, S1, S2, S3 = residue[-4], residue[-3], residue[-2], residue[-1]
             dS1, dS2, dS3 = fabs(S1-S0), fabs(S2-S1), fabs(S3-S2)
             if (dS2 <= dS1) and (dS2 <= dS3):
-                result.append([S1, S2])
+                result += [[S1, S2]]
                 del residue[-3]
                 del residue[-2]
+                len_residue -= 2
             else:
                 break
     return np.array(result), np.array(residue)
@@ -311,7 +313,7 @@ def find_rainflow_ranges(y, k=64):
     ValueError
         If no rainflow cycles are found in the sequence.
     """
-    reversals, __ = find_reversals(y, k)
+    reversals, _ = find_reversals(y, k)
     cycles_firstpass, residue = find_rainflow_cycles(reversals)
     processed_residue = concatenate_reversals(residue, residue)
     cycles_open_sequence, _ = find_rainflow_cycles(processed_residue)
@@ -365,7 +367,7 @@ def find_rainflow_ranges_strict(y, k=64):
         If no rainflow cycles are found in the sequence.
 
     """
-    reversals, __ = find_reversals_strict(y, k)
+    reversals, _ = find_reversals_strict(y, k)
     cycles_firstpass, residue = find_rainflow_cycles(reversals)
     processed_residue = concatenate_reversals(residue, residue)
     cycles_open_sequence, _ = find_rainflow_cycles(processed_residue)
