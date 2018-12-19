@@ -253,18 +253,18 @@ class TriLinearEnduranceCurve(BiLinearEnduranceCurve):
     def get_endurance(self, S):
         Sd, Sl = self.Sd, self.Sl
         c1, c2 = self.curve1, self.curve2
-        N = np.ones_like(S) * self.Ninf
+        N = np.zeros_like(S)
         N[S > Sd] = c1.get_endurance(S[S > Sd])
-        cond2 = (Sl <= S) & (S <= Sd)
-        N[cond2] = c2.get_endurance(S[cond2])
+        N[S<=Sd] = c2.get_endurance(S[S<=Sd])
+        N[S<Sl] = self.Ninf
         return N
 
     @ensure_array
     def get_stress(self, N):
         S = np.zeros_like(N)
-        cond1 = (N > 0.) & (N <= self.Nd)
-        S[cond1] = self.curve1.get_stress(N[cond1])
+        S[N <= self.Nd] = self.curve1.get_stress(N[N<=self.Nd])
         S[N > self.Nd] = self.curve2.get_stress(N[N > self.Nd])
+        S[N > self.Nl] = self.curve2.get_stress(self.Nl)
         return S
 
     @property
