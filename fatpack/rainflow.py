@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 Implementation of 4-point rainflow counting algorithm in numpy. The
-implementation and terminology is based off on the following resources:
+implementation and terminology is based on the following resources:
 
     `C. Amzallag et. al. Standardization of the rainflow counting method for
     fatigue analysis. International Journal of Fatigue, 16 (1994) 287-293`

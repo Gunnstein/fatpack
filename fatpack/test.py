@@ -4,7 +4,8 @@ from __future__ import (division, print_function, absolute_import,
 import numpy as np
 import unittest
 from .rainflow import (get_load_classes, get_load_class_boundaries,
-                       find_reversals_strict, find_rainflow_ranges_strict)
+                       find_reversals_strict, find_rainflow_ranges_strict,
+                       )
 from . import *
 
 TESTDATA = dict(
@@ -191,6 +192,15 @@ class TestEndurance(unittest.TestCase):
         N = self.tricrv.get_endurance([160., (2./5.)**(1./3.)*160., 20.])
         for f, s in zip(N, [2e6, 5e6, 1e32]):
             self.assertEqual(f, s)
+
+
+class TestRaceTrackFilter(BaseArrayTestCase, unittest.TestCase):
+    def setUp(self):
+        self.result_true = np.array(
+            [4.2,  7.3,  2., 10.3,  5.2,  8.5,  2.2, 12.,  5.5, 11.1,  1.,
+             9.5,  6., 12.,  3.9,  8.3,  1.2,  8.6,  3.9,  6.2])
+        y = TESTDATA['dataseries']
+        self.result, _ = find_reversals_racetrack_filtered(y, 2, k=64)
 
 
 if __name__ == "__main__":
