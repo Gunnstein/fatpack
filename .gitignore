@@ -3,6 +3,7 @@
 !setup.cfg
 !example.py
 !fatpack/
+!fatpack/*
 !*.png
 !README.rst
 !LICENSE
