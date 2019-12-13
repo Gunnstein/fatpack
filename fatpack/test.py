@@ -172,26 +172,111 @@ class TestFindReversals(unittest.TestCase):
         np.testing.assert_allclose(self.reversal_est, self.reversal_true)
 
 
-class TestEndurance(unittest.TestCase):
+class TestLinearEnduranceCurve(unittest.TestCase):
     def setUp(self):
-        self.crv = LinearEnduranceCurve(160.)
-        self.crv.m = 3.0
-        self.crv.Nc = 2e6
-        self.tricrv = TriLinearEnduranceCurve(160.)
+        self.m_true = 3.0
+        self.Nc_true = 5.0e6
+        self.Sc_true = 90
+        self.C_true = self.Nc_true*self.Sc_true**self.m_true
 
-    def test_intercept_constant(self):
-        self.assertEqual(8.192e+12, self.crv.C)
+        self.crv = LinearEnduranceCurve(self.Sc_true)
+        self.crv.m = self.m_true
+        self.crv.Nc = self.Nc_true
+
+        self.stress_true = np.array([93., 122., 14., 230., 94., 12., 1.])
+        self.endurance_true = (self.Sc_true / self.stress_true)**self.m_true * self.Nc_true
+
+
+    def test_m(self):
+        self.assertEqual(self.m_true, self.crv.m)
+
+    def test_Nc(self):
+        self.assertEqual(self.Nc_true, self.crv.Nc)
+
+    def test_Sc(self):
+        self.assertEqual(self.Sc_true, self.crv.Sc)
+
+    def test_C(self):
+        self.assertEqual(self.C_true, self.crv.C)
 
     def test_get_endurance(self):
-        self.assertEqual(2e6, self.crv.get_endurance(160.))
+        np.testing.assert_allclose(
+            self.endurance_true, self.crv.get_endurance(self.stress_true))
 
     def test_get_stress(self):
-        self.assertAlmostEqual(160., self.crv.get_stress(2e6))
+        np.testing.assert_allclose(
+            self.stress_true, self.crv.get_stress(self.endurance_true))
 
-    def test_get_bilinear_endurance(self):
-        N = self.tricrv.get_endurance([160., (2./5.)**(1./3.)*160., 20.])
-        for f, s in zip(N, [2e6, 5e6, 1e32]):
-            self.assertEqual(f, s)
+    def test_find_miner_sum(self):
+        miner_sum = self.crv.find_miner_sum(self.stress_true)
+        miner_sum_true = np.sum(1. / self.endurance_true)
+        self.assertEqual(miner_sum_true, miner_sum)
+
+
+class TestBiLinearEnduranceCurve(TestLinearEnduranceCurve):
+    def setUp(self):
+        self.m1_true = 4.0
+        self.Nc_true = 5.0e6
+        self.Sc_true = 29.0
+        self.C1_true = self.Nc_true*self.Sc_true**self.m1_true
+
+        self.m2_true = 6.0
+        self.Nd_true = 1.0e7
+        self.Sd_true = (self.Nc_true/self.Nd_true)**(1/self.m1_true)*self.Sc_true
+        self.C2_true = self.Nd_true*self.Sd_true**self.m2_true
+
+        self.crv = BiLinearEnduranceCurve(self.Sc_true)
+        self.crv.m1 = self.m1_true
+        self.crv.Nc = self.Nc_true
+        self.crv.m2 = self.m2_true
+        self.crv.Nd = self.Nd_true
+
+        self.stress_true = np.array([93., 122., 14., 230., 94., 12., 1.])
+        self.endurance_true = (self.Sc_true / self.stress_true)**self.m1_true * self.Nc_true
+        S2s = self.stress_true[self.stress_true < self.Sd_true]
+        self.endurance_true[self.stress_true < self.Sd_true] = (
+            (self.Sd_true / S2s)**self.m2_true * self.Nd_true)
+
+    def test_m(self):
+        self.assertEqual(self.m1_true, self.crv.m1)
+        self.assertEqual(self.m2_true, self.crv.m2)
+
+    def test_Nd(self):
+        self.assertEqual(self.Nd_true, self.crv.Nd)
+
+    def test_Sd(self):
+        self.assertEqual(self.Sd_true, self.crv.Sd)
+
+    def test_C(self):
+        self.assertEqual(self.C1_true, self.crv.C1)
+        self.assertEqual(self.C2_true, self.crv.C2)
+
+
+class TestTriLinearEnduranceCurve(TestBiLinearEnduranceCurve):
+    def setUp(self):
+        super(TestTriLinearEnduranceCurve, self).setUp()
+        self.crv = TriLinearEnduranceCurve(self.Sc_true)
+        self.crv.m1 = self.m1_true
+        self.crv.Nc = self.Nc_true
+        self.crv.m2 = self.m2_true
+        self.crv.Nd = self.Nd_true
+
+        self.Nl_true = 2.0e8
+        self.crv.Nl = self.Nl_true
+        self.Sl_true = (self.Nd_true / self.Nl_true) ** (1/self.m2_true) * self.Sd_true
+
+        self.stress_true[self.stress_true < self.Sl_true] = self.Sl_true
+        self.endurance_true = (self.Sc_true / self.stress_true)**self.m1_true * self.Nc_true
+        S2s = self.stress_true[self.stress_true < self.Sd_true]
+        self.endurance_true[self.stress_true < self.Sd_true] = (
+            (self.Sd_true / S2s)**self.m2_true * self.Nd_true)
+        self.endurance_true[self.stress_true < self.Sl_true] = np.inf
+
+    def test_Sl(self):
+        self.assertEqual(self.Sl_true, self.crv.Sl)
+
+    def test_Nl(self):
+        self.assertEqual(self.Nl_true, self.crv.Nl)
 
 
 class TestRaceTrackFilter(BaseArrayTestCase, unittest.TestCase):

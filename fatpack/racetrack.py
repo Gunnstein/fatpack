@@ -22,19 +22,21 @@ __all__ = ["racetrack_filter", "find_reversals_racetrack_filtered"]
 def racetrack_filter(reversals, h):
     """Racetrack filter for accelerated fatigue testing.
 
-    The racetrack amplitude filter removes low amplitude cycles from the
-    reversals without altering the sequence of the remaining cycles. The
-    racetrack filter therefore allows to accelerate variable amplitude
-    fatigue testing by removing low amplitude cycles which does not
-    significantly affect the overall fatigue damage and at the same time
-    preserves sequence effects inherent in the original sequence.
+    The racetrack amplitude filter removes low amplitude cycles from
+    the reversals without altering the sequence of the remaining
+    cycles. The racetrack filter therefore allows to accelerate
+    variable amplitude fatigue testing by removing low amplitude
+    cycles which does not significantly affect the overall fatigue
+    damage and at the same time preserves sequence effects inherent in
+    the original sequence.
 
     Arguments
     ---------
     reversals : ndarray
         An 1D-array of reversals.
     h : float
-        Racetrack width, cycles with range lower than width are filtered out.
+        Racetrack width, cycles with range lower than width are
+        filtered out.
 
     Returns
     -------
@@ -60,31 +62,34 @@ def racetrack_filter(reversals, h):
 
 
 def find_reversals_racetrack_filtered(y, h, k=64):
-    """Return reversals (peaks and valleys) and indices of reversals in `y`.
+    """Return racetrack filtered reversals and indices in `y`.
 
-    The data points in the dataseries `y` are classified into `k` constant
-    sized intervals and then peak-valley filtered to yield the successive
-    extremas of the dataseries `y`. The reversals are then filtered with the
-    racetrack amplitude filter and then peak-valley filtered again to find
-    the racetrack filtered reversals.
+    The data points in the dataseries `y` are classified into `k`
+    constant sized intervals and then peak-valley filtered to yield
+    the successive extremas of the dataseries `y`. The reversals are
+    then filtered with the racetrack amplitude filter and then
+    peak-valley filtered again to find the racetrack filtered
+    reversals.
 
     Arguments
     ---------
     y : ndarray
         Dataseries containing the signal to find the reversals for.
     h : float
-        Racetrack width, cycles with range lower than width are filtered out.
+        Racetrack width, cycles with range lower than width are
+        filtered out.
     k : int
-        The number of intervals to divide the min-max range of the dataseries
-        into.
+        The number of intervals to divide the min-max range of the
+        dataseries into.
 
     Returns
     -------
     reversals : ndarray
-        Reversals of the initial data series `y` after racetrack filtering.
+        Reversals of the initial data series `y` after racetrack
+        filtering.
     indices : ndarray
-        The indices of the initial data series `y` which corresponds to the
-        reversals.
+        The indices of the initial data series `y` which corresponds
+        to the reversals.
     """
     _, ix = find_reversals(y, k=k)
     z, ixz = racetrack_filter(y[ix], h)

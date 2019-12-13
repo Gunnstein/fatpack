@@ -3,7 +3,8 @@
 !setup.cfg
 !example.py
 !fatpack/
-!fatpack/*
+!fatpack/*.py
 !*.png
 !README.rst
 !LICENSE
+!tox.ini

@@ -54,11 +54,13 @@ ax_rfcmat.set(title="Rainflow matrix",
 
 # Let us also get the EC3 endurance curve for detail category 160 and plot it.
 ax = plt.subplot2grid((3, 2), (2, 0), colspan=2,)
-S = np.logspace(1., 3., 1000)
 curve = fatpack.TriLinearEnduranceCurve(160)
-N = curve.get_endurance(S)
+
+N = np.logspace(6, 9)
+S = curve.get_stress(N)
+
 ax.loglog(N, S)
-ax.set(xlim=(1e4, 2e8), ylim=(1., 1000),
+ax.set(xlim=(1e6, 2e8), ylim=(1., 1000),
        title="Endurance curve, detail category 160 Mpa",
        xlabel="Endurance [1]", ylabel="Stress Range [Mpa]")
 ax.grid()

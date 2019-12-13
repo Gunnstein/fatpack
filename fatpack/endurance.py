@@ -1,11 +1,28 @@
 # -*- coding: utf-8 -*-
 from __future__ import (division, print_function, absolute_import,
                         unicode_literals)
-import numpy as np
 import abc
+from functools import wraps
+import numpy as np
+
 
 __all__ = ["LinearEnduranceCurve", "BiLinearEnduranceCurve",
            "TriLinearEnduranceCurve"]
+
+
+def ensure_array(method):
+    @wraps(method)
+    def wrapped_method(self, x):
+        x_is_float_or_int = isinstance(x, float) or isinstance(x, int)
+        if x_is_float_or_int:
+            xm = np.array([x])
+        else:
+            xm = np.asfarray(x)
+        ym = method(self, xm)
+        if x_is_float_or_int:
+            ym = ym[0]
+        return ym
+    return wrapped_method
 
 
 class AbstractEnduranceCurve(object):
@@ -18,10 +35,10 @@ class AbstractEnduranceCurve(object):
     """
     __metaclass__ = abc.ABCMeta
 
-    Ninf = 1e32
+    Ninf = np.inf
 
     def __init__(self, Sc):
-        """Define a linear endurance curve.
+        """Define endurance curve.
 
         See class docstring for more information.
 
@@ -34,16 +51,33 @@ class AbstractEnduranceCurve(object):
 
     @abc.abstractmethod
     def get_endurance(self, S):
-        pass
+        """Return endurance value(s) for stress range(s) S.
+
+        Arguments
+        ---------
+        S : float or 1darray
+            Stress range(s) to find the corresponding endurance(s) for.
+
+        Returns
+        -------
+        float or 1darray
+            Endurance for the stress range(s) S.
+        """
 
     @abc.abstractmethod
     def get_stress(self, N):
-        pass
+        """Return stress range(s) for the endurance(s) N.
 
-    @property
-    def C(self):
-        """Characteristic intercept constant."""
-        return self.Nc * self.Sc ** self.m
+        Arguments
+        ---------
+        N : float or 1darray
+            Endurance(s) to find the corresponding stress for.
+
+        Returns
+        -------
+        float or 1darray
+            Stress range(s) for endurance(s) N.
+        """
 
     def find_miner_sum(self, S):
         """Calculate Miner sum of stress ranges S with the endurance curve.
@@ -69,9 +103,8 @@ class AbstractEnduranceCurve(object):
         ValueError
             If `S` is not a 1darray (N, ) or 2darray (N, 2).
         """
-        Sr = np.asarray(S)
+        Sr = np.asfarray(S)
         shape = Sr.shape
-        miner_sum = None
         if len(shape) == 1:
             miner_sum = np.sum(1. / self.get_endurance(Sr))
         elif len(shape) == 2 and shape[1] == 2:
@@ -79,19 +112,6 @@ class AbstractEnduranceCurve(object):
         else:
             raise ValueError("S must be 1darray (N) or 2darray (N, 2)")
         return miner_sum
-
-
-def ensure_array(method):
-    def f(self, x):
-        if isinstance(x, float):
-            xm = np.array([x])
-        else:
-            xm = np.asarray(x)
-        ym = method(self, xm)
-        if isinstance(x, float):
-            ym = ym[0]
-        return ym
-    return f
 
 
 class LinearEnduranceCurve(AbstractEnduranceCurve):
@@ -125,6 +145,11 @@ class LinearEnduranceCurve(AbstractEnduranceCurve):
     m = 5.0
     Nc = 2.0e6
 
+    @property
+    def C(self):
+        """Characteristic intercept constant."""
+        return self.Nc * self.Sc ** self.m
+
     @ensure_array
     def get_endurance(self, S):
         return self.Nc * (self.Sc / S) ** self.m
@@ -138,7 +163,7 @@ class BiLinearEnduranceCurve(AbstractEnduranceCurve):
     """Define a bilinear endurance curve.
 
             ^
-            |
+            |             log N - log S
             |*
             | *  m1
             |  *- -+
@@ -160,8 +185,8 @@ class BiLinearEnduranceCurve(AbstractEnduranceCurve):
                              Endurance
 
 
-    In fatpack the slope parameters (m1, m2), endurance value at the
-    knee point of the bilinear curve (Nd) and the `detail category` or
+    The slope parameters (m1, m2), endurance value at the knee point
+    of the bilinear curve (Nd) and the `detail category` or
     `characteristic` stress and endurance (Sc, Nc) is used to define
     the bilinear curve. The default values for the characteristic
     endurance `Nc` (2.0e6) and the slope `m` (5.0) properties can be
@@ -173,18 +198,23 @@ class BiLinearEnduranceCurve(AbstractEnduranceCurve):
     m1 = 3.0
     m2 = 5.0
 
-    def __init__(self, Sc):
-        super(BiLinearEnduranceCurve, self).__init__(Sc)
-        self.curve1 = LinearEnduranceCurve(Sc)
-        self.curve1.m = self.m1
-        self.curve1.Nc = self.Nc
-        self.curve2 = LinearEnduranceCurve(self.Sd)
-        self.curve2.m = self.m2
-        self.curve2.Nc = self.Nd
-
     @property
     def Sd(self):
         return self.Sc * (self.Nc / self.Nd) ** (1. / self.m1)
+
+    @property
+    def curve1(self):
+        curve = LinearEnduranceCurve(self.Sc)
+        curve.Nc = self.Nc
+        curve.m = self.m1
+        return curve
+
+    @property
+    def curve2(self):
+        curve = LinearEnduranceCurve(self.Sd)
+        curve.Nc = self.Nd
+        curve.m = self.m2
+        return curve
 
     @ensure_array
     def get_endurance(self, S):
@@ -204,18 +234,18 @@ class BiLinearEnduranceCurve(AbstractEnduranceCurve):
     @property
     def C1(self):
         """Intercept constant for the first slope."""
-        return self.Nd * self.Sd ** self.m1
+        return self.curve1.C
 
     @property
     def C2(self):
         """Intercept constant for the second slope."""
-        return self.Nd * self.Sd ** self.m2
+        return self.curve2.C
 
 
 class TriLinearEnduranceCurve(BiLinearEnduranceCurve):
     """Define a trilinear endurance curve.
             ^
-            |
+            |              log N - log S
             |*
             | *  m1
             |  *---+
@@ -234,14 +264,10 @@ class TriLinearEnduranceCurve(BiLinearEnduranceCurve):
                Nc   Nd             Nl
                              Endurance
 
-    The trilinear curve is defined by six parameters. In fatpack the
-    slope parameters (m1, m2), endurance values at the knee points of
-    the trilinear curve (Nd, Nl) and the `detail category` or
+    The slope parameters (m1, m2), endurance values at the knee points
+    of the trilinear curve (Nd, Nl) and the `detail category` or
     `characteristic` stress and endurance (Sc, Nc) is used to define
-    the trilinear curve. This definition is in accordance with CEN
-    Eurocode EC-3-9 and the default values for Nc, Nd, Nl, m1, m2 are
-    taken from EC-3-9.
-
+    the trilinear curve.
     """
     Nc = 2.0e6
     Nd = 5.0e6
@@ -249,28 +275,22 @@ class TriLinearEnduranceCurve(BiLinearEnduranceCurve):
     m1 = 3.0
     m2 = 5.0
 
-    @ensure_array
-    def get_endurance(self, S):
-        Sd, Sl = self.Sd, self.Sl
-        c1, c2 = self.curve1, self.curve2
-        N = np.zeros_like(S)
-        N[S > Sd] = c1.get_endurance(S[S > Sd])
-        N[S<=Sd] = c2.get_endurance(S[S<=Sd])
-        N[S<Sl] = self.Ninf
-        return N
-
-    @ensure_array
-    def get_stress(self, N):
-        S = np.zeros_like(N)
-        S[N <= self.Nd] = self.curve1.get_stress(N[N<=self.Nd])
-        S[N > self.Nd] = self.curve2.get_stress(N[N > self.Nd])
-        S[N > self.Nl] = self.curve2.get_stress(self.Nl)
-        return S
-
     @property
     def Sl(self):
         """Variable amplitude fatigue limit."""
         return self.Sd * (self.Nd / self.Nl) ** (1. / self.m2)
+
+    @ensure_array
+    def get_endurance(self, S):
+        N = super(TriLinearEnduranceCurve, self).get_endurance(S)
+        N[S<self.Sl] = self.Ninf
+        return N
+
+    @ensure_array
+    def get_stress(self, N):
+        S = super(TriLinearEnduranceCurve, self).get_stress(N)
+        S[N > self.Nl] = self.curve2.get_stress(self.Nl)
+        return S
 
 
 if __name__ == "__main__":
