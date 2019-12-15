@@ -36,8 +36,16 @@ TESTDATA = dict(
                                 [ 4.,  3.], [10.,  6.], [ 4.,  8.], [ 1., 12.],
                                 [ 4.,  6.], [ 4.,  7.], [ 9.,  2.], [ 1., 12.],
                                 ]),
-            ranges_total = np.array([4.,  1.,  8.,  6.,  1.,  4.,
+            ranges_total_strict = np.array([4.,  1.,  8.,  6.,  1.,  4.,
                                      4., 11.,  2.,  3.,  7., 11.]),
+            ranges_total = np.array([ 0.171875,  3.4375,  1.375,  0.171875,
+                                      8.078125,  5.671875, 0.6875,  3.4375,
+                                      4.296875,  1.890625,  3.4375,  6.53125,
+                                      10.828125, 11.0]),
+            ranges_total_means = np.array([9.679688, 6.84375, 3.75, 2.289062,
+                                           6.242188, 8.304688, 3.921875, 7.703125,
+                                           6.070312, 5.210938, 5.640625, 5.296875,
+                                           6.585938, 6.50]),
             ranges_count = np.array([2, 1, 1, 3, 0, 1, 1, 1, 0, 0, 2, 0]),
             classes = np.array([1., 2., 3., 4., 5., 6.,
                                 7., 8., 9., 10., 11., 12.]),
@@ -65,8 +73,8 @@ class BaseArrayTestCase:
     def test_array_equal(self):
         np.testing.assert_array_equal(self.result, self.result_true)
 
-    def test_allclose(self):
-        np.testing.assert_allclose(self.result, self.result_true)
+    # def test_allclose(self):
+    #     np.testing.assert_allclose(self.result, self.result_true)
 
 
 class TestFindReversalsStrict(BaseArrayTestCase, unittest.TestCase):
@@ -128,9 +136,25 @@ class TestFindRainflowMatrix(BaseArrayTestCase, unittest.TestCase):
         self.result = find_rainflow_matrix(cycles, bins, bins)
 
 
-class TestFindRainflowRangesStrict(BaseArrayTestCase, unittest.TestCase):
+class TestFindRainflowRanges(BaseArrayTestCase, unittest.TestCase):
     def setUp(self):
         self.result_true = TESTDATA['ranges_total']
+        self.result = find_rainflow_ranges(TESTDATA['dataseries'], k=64)
+
+
+class TestFindRainflowRangesMeans(unittest.TestCase):
+    def setUp(self):
+        self.result_true = TESTDATA['ranges_total_means']
+        _, self.result = find_rainflow_ranges(
+            TESTDATA['dataseries'], k=64, return_means=True)
+
+    def test_almost_equal(self):
+        np.testing.assert_allclose(self.result, self.result_true, rtol=1e-6)
+
+
+class TestFindRainflowRangesStrict(BaseArrayTestCase, unittest.TestCase):
+    def setUp(self):
+        self.result_true = TESTDATA['ranges_total_strict']
         self.result = find_rainflow_ranges_strict(
                                                 TESTDATA['dataseries'], k=11)
 
@@ -140,7 +164,7 @@ class TestFindRangeCount(unittest.TestCase):
         self.N_true = TESTDATA['ranges_count']
         self.S_true = TESTDATA['classes']
         self.N, self.S = find_range_count(
-                            TESTDATA['ranges_total'],
+                            TESTDATA['ranges_total_strict'],
                             bins=TESTDATA['class_boundaries'])
 
     def test_count_allclose(self):

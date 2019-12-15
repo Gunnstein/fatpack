@@ -286,7 +286,7 @@ def find_rainflow_matrix(cycles, rowbins, colbins):
     return mat
 
 
-def find_rainflow_ranges(y, k=64):
+def find_rainflow_ranges(y, k=64, return_means=False):
     """Returns the ranges of the complete series (incl. residue)
 
     Returns the ranges by first determining the reversals of the dataseries
@@ -302,11 +302,15 @@ def find_rainflow_ranges(y, k=64):
     k : int
         The number of intervals to divide the min-max range of the dataseries
         into.
+    return_means : bool
+        Return mean for each rainflow range.
 
     Returns
     -------
     ranges : ndarray
         The ranges identified by the rainflow algorithm in the dataseries.
+    means : Optional[ndarray]
+        The mean values for each range.
 
     Raises
     ------
@@ -328,10 +332,14 @@ def find_rainflow_ranges(y, k=64):
     else:
         raise ValueError("Could not find any cycles in sequence")
     ranges = np.abs(cycles[:, 1] - cycles[:, 0])
-    return ranges
+    if return_means:
+        means = 0.5 * (cycles[:, 0] + cycles[:, 1])
+        return ranges, means
+    else:
+        return ranges
 
 
-def find_rainflow_ranges_strict(y, k=64):
+def find_rainflow_ranges_strict(y, k=64, return_means=False):
     """Returns the ranges of the complete series (incl. residue)
 
     Returns the ranges by first determining the reversals of the dataseries
@@ -355,11 +363,15 @@ def find_rainflow_ranges_strict(y, k=64):
     k : int
         The number of intervals to divide the min-max range of the dataseries
         into.
+    return_means : bool
+        Return mean for each rainflow range.
 
     Returns
     -------
     ranges : ndarray
         The ranges identified by the rainflow algorithm in the dataseries.
+    means : Optional[ndarray]
+        The mean values for each range.
 
     Raises
     ------
@@ -382,7 +394,11 @@ def find_rainflow_ranges_strict(y, k=64):
     else:
         raise ValueError("Could not find any cycles in sequence")
     ranges = np.abs(cycles[:, 1] - cycles[:, 0])
-    return ranges
+    if return_means:
+        means = 0.5 * (cycles[:, 0] + cycles[:, 1])
+        return ranges, means
+    else:
+        return ranges
 
 
 def find_range_count(ranges, bins=10, weights=None):
