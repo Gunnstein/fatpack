@@ -1,0 +1,28 @@
+import numpy as np
+import fatpack
+import matplotlib.pyplot as plt
+
+# Generate a signal
+s = np.random.normal(size=10000)*10
+
+# Extract stress ranges and means 
+S, Sm = fatpack.find_rainflow_ranges(s, return_means=True, k=2**14)
+
+# Create bins to divide the stress ranges and means into
+bins_Sm = np.arange(-25, 26., 1)
+bins_S = np.arange(0, 75., 1)
+
+# Create a matrix with mean stress in first column and stress range in second column
+# (this is also where you would change introduce other variables (e.g. Smin and Smax))
+M = np.array([Sm, S]).T
+
+# Create the rainflow matrix
+rfcmat = fatpack.find_rainflow_matrix(M, bins_Sm, bins_S)
+
+# Establish the coordinates for each element in the rainflow matrix
+X, Y = np.meshgrid(bins_Sm, bins_S, indexing='ij')
+
+# Plot the rainflow matrix
+plt.pcolormesh(X, Y, rfcmat,)
+plt.xlabel("Mean stress (MPa)")
+plt.ylabel("Stress range (MPa)")
