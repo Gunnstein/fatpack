@@ -102,7 +102,27 @@ class AbstractEnduranceCurve(object):
         ------
         ValueError
             If `S` is not a 1darray (N, ) or 2darray (N, 2).
+
+        Example
+        -------
+        >>> import fatpack
+        >>> import numpy as np
+        >>> np.random.seed(10)
+
+        First we create an endurance curve with detail category 90.
+        >>> curve = fatpack.LinearEnduranceCurve(90.)
+
+        The miner sum is then found from a signal y after extracting 
+        rainflow ranges in the following way
+
+        >>> y = np.random.normal(size=100000) * 10.
+        >>> S = fatpack.find_rainflow_ranges(y)
+        >>> D = curve.find_miner_sum(S)
+        >>> print("The damage in signal y is D={0:3.2e}".format(D))
+        The damage in signal y is D=6.56e-05
+
         """
+
         Sr = np.asfarray(S)
         shape = Sr.shape
         if len(shape) == 1:
@@ -141,7 +161,39 @@ class LinearEnduranceCurve(AbstractEnduranceCurve):
     the linear curve. The default values for the characteristic
     endurance `Nc` (2.0e6) and the slope `m` (5.0) properties can be
     adjusted on the instance and class.
+
+    Example
+    -------
+    >>> import fatpack
+    >>> import numpy as np
+    >>> np.random.seed(10)
+
+    First we create an endurance curve with detail category 90.
+    >>> curve = fatpack.LinearEnduranceCurve(90.)
+
+    Let us find the damage according to Miner's linear damage rule from
+    a rainflow counted signal y
+
+    >>> y = np.random.normal(size=100000) * 10.
+    >>> S = fatpack.find_rainflow_ranges(y)
+    >>> D = curve.find_miner_sum(S)
+    >>> print("The damage in signal y is D={0:3.2e}".format(D))
+    The damage in signal y is D=6.56e-05
+
+    Finally, we can create a figure of the endurance curve with matplotlib
+    
+    >>> import matplotlib.pyplot as plt
+    >>> N = np.logspace(4, 9, 1000)
+    >>> S = curve.get_stress(N)
+    >>> line = plt.loglog(N, S)
+    >>> grd = plt.grid(which='both')
+    >>> title = plt.title("Linear endurance curve")
+    >>> xlab = plt.xlabel("Cycles to failure (1)")
+    >>> ylab = plt.ylabel("Stress range (MPa)")
+    >>> plt.show(block=True)
+
     """
+
     m = 5.0
     Nc = 2.0e6
 
@@ -162,8 +214,8 @@ class LinearEnduranceCurve(AbstractEnduranceCurve):
 class BiLinearEnduranceCurve(AbstractEnduranceCurve):
     """Define a bilinear endurance curve.
 
-            ^
-            |             log N - log S
+            ^                log N - log S
+            |
             |*
             | *  m1
             |  *- -+
@@ -192,7 +244,38 @@ class BiLinearEnduranceCurve(AbstractEnduranceCurve):
     endurance `Nc` (2.0e6) and the slope `m` (5.0) properties can be
     adjusted on the instance and class.
 
+    Example
+    -------
+    >>> import fatpack
+    >>> import numpy as np
+    >>> np.random.seed(10)
+
+    First we create an endurance curve with detail category 90.
+    >>> curve = fatpack.BiLinearEnduranceCurve(90.)
+
+    Let us find the damage according to Miner's linear damage rule from
+    a rainflow counted signal y
+
+    >>> y = np.random.normal(size=100000) * 10.
+    >>> S = fatpack.find_rainflow_ranges(y)
+    >>> D = curve.find_miner_sum(S)
+    >>> print("The damage in signal y is D={0:3.2e}".format(D))
+    The damage in signal y is D=1.19e-04
+
+    Finally, we can create a figure of the endurance curve with matplotlib
+    
+    >>> import matplotlib.pyplot as plt
+    >>> N = np.logspace(4, 9, 1000)
+    >>> S = curve.get_stress(N)
+    >>> line = plt.loglog(N, S)
+    >>> grd = plt.grid(which='both')
+    >>> title = plt.title("Bi linear endurance curve")
+    >>> xlab = plt.xlabel("Cycles to failure (1)")
+    >>> ylab = plt.ylabel("Stress range (MPa)")
+    >>> plt.show(block=True)
+
     """
+
     Nc = 2.0e6
     Nd = 5.0e6
     m1 = 3.0
@@ -244,8 +327,8 @@ class BiLinearEnduranceCurve(AbstractEnduranceCurve):
 
 class TriLinearEnduranceCurve(BiLinearEnduranceCurve):
     """Define a trilinear endurance curve.
-            ^
-            |              log N - log S
+            ^                log N - log S
+            |              
             |*
             | *  m1
             |  *---+
@@ -268,7 +351,39 @@ class TriLinearEnduranceCurve(BiLinearEnduranceCurve):
     of the trilinear curve (Nd, Nl) and the `detail category` or
     `characteristic` stress and endurance (Sc, Nc) is used to define
     the trilinear curve.
+
+    Example
+    -------
+    >>> import fatpack
+    >>> import numpy as np
+    >>> np.random.seed(10)
+
+    First we create an endurance curve with detail category 90.
+    >>> curve = fatpack.TriLinearEnduranceCurve(90.)
+
+    Let us find the damage according to Miner's linear damage rule from
+    a rainflow counted signal y
+
+    >>> y = np.random.normal(size=100000) * 10.
+    >>> S = fatpack.find_rainflow_ranges(y)
+    >>> D = curve.find_miner_sum(S)
+    >>> print("The damage in signal y is D={0:3.2e}".format(D))
+    The damage in signal y is D=9.23e-05
+
+    Finally, we can create a figure of the endurance curve with matplotlib
+    
+    >>> import matplotlib.pyplot as plt
+    >>> N = np.logspace(4, 9, 1000)
+    >>> S = curve.get_stress(N)
+    >>> line = plt.loglog(N, S)
+    >>> grd = plt.grid(which='both')
+    >>> title = plt.title("Tri linear endurance curve")
+    >>> xlab = plt.xlabel("Cycles to failure (1)")
+    >>> ylab = plt.ylabel("Stress range (MPa)")
+    >>> plt.show(block=True)
+
     """
+    
     Nc = 2.0e6
     Nd = 5.0e6
     Nl = 1.0e8
@@ -294,20 +409,5 @@ class TriLinearEnduranceCurve(BiLinearEnduranceCurve):
 
 
 if __name__ == "__main__":
-
-    import matplotlib.pyplot as plt
-    fig, ax = plt.subplots(dpi=300)
-    S = np.logspace(1., 3, 1000)
-    C = TriLinearEnduranceCurve(71.)
-    Cbi = BiLinearEnduranceCurve(71.)
-    N = C.get_endurance(S)
-    Nbi = Cbi.get_endurance(S)
-    print(C.get_stress(2e6))
-    print(C.get_endurance(71.))
-    ax.loglog(N, S)
-    ax.loglog(Nbi, S)
-    ax.set(xlim=(1e4, 2e8), ylim=(1, 1000), xlabel='Endurance, Sc=71 MPa',
-           ylabel="Stress range [Mpa]")
-    plt.grid(which='major')
-    plt.grid(which='both')
-    plt.show(block=True)
+    import doctest
+    doctest.testmod()

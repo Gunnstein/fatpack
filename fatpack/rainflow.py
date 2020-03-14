@@ -72,7 +72,13 @@ def find_reversals_strict(y, k=64):
     indices : ndarray
         The indices of the initial data series `y` which corresponds to the
         reversals.
+
+    See Also
+    --------
+    find_reversals: Faster version of this function
+
     """
+
     y = y.copy()  # Make sure we do not change the original sequence
     sgn = np.sign
     Y = get_load_class_boundaries(y, k)
@@ -144,7 +150,23 @@ def find_reversals(y, k=64):
     indices : ndarray
         The indices of the initial data series `y` which corresponds to the
         reversals.
+
+    Example
+    -------
+    >>> import fatpack
+    >>> import numpy as np
+    >>> np.random.seed(10)
+
+    Generate a dataseries for the example
+    
+    >>> y = np.random.normal(size=100000) * 10.
+
+    The reversals (peaks and valleys) and corresponding indices are then obtained by 
+
+    >>> reversals, indices = fatpack.find_reversals(y)
+
     """
+
     Y = get_load_class_boundaries(y, k)
     dY = Y[1] - Y[0]
 
@@ -182,7 +204,30 @@ def concatenate_reversals(reversals1, reversals2):
     -------
     ndarray
         Sequence of reversals of the concatenated sequences.
+
+    Example
+    -------
+    >>> import fatpack
+    >>> import numpy as np
+    >>> np.random.seed(10)
+
+    Generate two dataseries for the example
+    
+    >>> y1 = np.random.normal(size=50000) * 10.
+    >>> y2 = np.random.normal(size=50000) * 10. 
+
+    Find the reversals in the dataseries
+
+    >>> rev_1, ix1 = fatpack.find_reversals(y1)
+    >>> rev_2, ix2 = fatpack.find_reversals(y2)
+
+    The reversals may then be concatenated (joined) into a new
+    sequence of reversals by
+
+    >>> rev = fatpack.concatenate_reversals(rev_1, rev_2)
+
     """
+
     R1, R2 = reversals1, reversals2
     dRstart, dRend, dRjoin = R2[1] - R2[0], R1[-1] - R1[-2], R2[0] - R1[-1]
     t1, t2 = dRend*dRstart, dRend*dRjoin
@@ -213,7 +258,42 @@ def find_rainflow_cycles(reversals):
     residue : ndarray
         The residue of the reversal series after one pass of the rainflow
         algorithm.
+
+    Example
+    -------
+    >>> import fatpack
+    >>> import numpy as np
+    >>> np.random.seed(10)
+
+    Generate a dataseries for the example
+    
+    >>> y = np.random.normal(size=100000) * 10.
+
+    First we must find the reversals in the dataseries
+
+    >>> rev_1, ix1 = fatpack.find_reversals(y)
+
+    then the (closed) rainflow cycles and residual reversals are extracted
+
+    >>> cyc_1, res = fatpack.find_rainflow_cycles(rev_1)
+
+    The residual after the first pass of the rainflow algorithm contains open
+    rainflow cycles. If the dataseries y represents a repeating process, these cycles
+    are closed on the next repetition and should be included in the cycle count by 
+    concatenating the reversals in the residual with itself and rainflow cycle counting
+    is applied once more. The process of extracting the rainflow cycles from the residue
+    is shown below
+
+    >>> rev_res = fatpack.concatenate_reversals(res, res)
+    >>> cyc_res, _ = fatpack.find_rainflow_cycles(rev_res)
+
+    Finally, all rainflow cycles in the original sequence is joined together in a single
+    array
+
+    >>> rainflow_cycles = np.concatenate((cyc_1, cyc_res))
+
     """
+
     result = []
     residue = []
     len_residue = 0
@@ -233,38 +313,106 @@ def find_rainflow_cycles(reversals):
     return np.array(result), np.array(residue)
 
 
-def find_rainflow_matrix(cycles, rowbins, colbins):
-    """Return the rainflowmatrix
+def find_rainflow_matrix(data_array, rowbins, colbins, return_bins=False):
+    """Return the rainflowmatrix for the data in data_array
+
+    The data in the first and second column of data_array are binned into
+    the row and column of the rainflow matrix, respectively.
 
     The classification includes the smallest bin edge, i.e if the bins are
     strictly increasing, bin_i < bin_i+1, and the classification of value x is
-    `bin_i <= x < bin_i+1` for all bins except the rightmost bin. Cycles lying
-    **on** the rightmost bin edge are included in the last bin, .
+    `bin_i <= x < bin_i+1` for all bins except the rightmost bin. Data lying
+    **on** the rightmost bin edge are included in the last bin.
 
     Arguments
     ---------
-    cycles : ndarray
+    data_array : ndarray
         (N x 2) array where the first column determines the row index and the
         second column the column index according to `rowbins` and `colbins`,
         respectively.
 
-    rowbins, colbins : ndarray
-        The edges of the bins for classifying the cycles into the rainflow
-        matrix. These arrays must be monotonic.
+    rowbins, colbins : ndarray or int
+        The edges of the bins for classifying the data_array into the rainflow
+        matrix. 
+        - If bins is a sequence, the values are treated as the left edges (and
+        the rightmost edge) of the bins. These arrays must increase monotonically 
+        and data values outside the range of the bins are ignored.
+        - If bins is an int, a sequence is created diving the range `min`--`max`
+        of y into `bin` number of equally sized bins. 
 
-        Cycle values outside the range of the bins are ignored.
+    return_bins : Optional[bool]
+        If true, row and column bins are also returned together with the rainflow 
+        matrix
 
     Returns
     -------
-    ndarray
+    rfcmat : 2darray
         Rainflow matrix corresponding to the row and colbins.
+    
+    or if return_bins is True:
+
+    rowbins, colbins, rfcmat : 1darray, 1darray, 2darray
+        Rainflow matrix and the corresponding row and column bins. 
 
     Raises
     ------
     ValueError
         If rowbins or colbins are not monotonic.
+
+    Example
+    -------
+    >>> import fatpack
+    >>> import numpy as np
+    >>> np.random.seed(10)
+
+    Generate a dataseries for the example
+    
+    >>> y = np.random.normal(size=100000) * 10.
+
+    Let us create a mean-stress vs stress-range rainflow matrix,
+    start by extracting the stress-range and means from the dataseries.
+
+    >>> S, Sm = fatpack.find_rainflow_ranges(y, return_means=True, k=256)
+
+    Next create the bins to divide the stress ranges and means into
+
+    >>> bins_S = np.arange(0., 76., 1)
+    >>> bins_Sm = np.arange(-25., 26., 1.)
+
+    and establish the data array. Note that other datavectors vectors, e.g. 
+    Smin and Smax, may also be used to create other data arrays and
+    resulting rainflow matrices.
+
+    >>> data_array = np.array([Sm, S]).T
+
+    Finally, establish the rainflow matrix from the data array and the
+    specified row and column bins.
+
+    >>> rfcmat = fatpack.find_rainflow_matrix(data_array, bins_Sm, bins_S)
+
+    A figure of the rainflow matrix is useful, first find the coordinates of 
+    each element in the rainflow matrix
+
+    >>> X, Y = np.meshgrid(bins_Sm, bins_S, indexing='ij')
+
+    and plot the rainflow matrix with matplotlib
+
+    >>> import matplotlib.pyplot as plt
+    >>> C = plt.pcolormesh(X, Y, rfcmat)
+    >>> cbar = plt.colorbar(C)
+    >>> title = plt.title("Rainflow matrix")
+    >>> xlab = plt.xlabel("Mean stress range (MPa)")
+    >>> ylab = plt.ylabel("Stress range (MPa)")
+    >>> plt.show(block=True)
+
     """
-    cc = cycles
+
+    cc = data_array
+
+    if isinstance(rowbins, int):
+        rowbins = np.linspace(cc[:, 0].min(), cc[:, 1].max(), rowbins)
+    if isinstance(colbins, int):
+        colbins = np.linspace(cc[:, 1].min(), cc[:, 1].max(), colbins)
 
     mat = np.zeros((rowbins.size-1, colbins.size-1), dtype=np.float)
     (N, M) = mat.shape
@@ -278,12 +426,15 @@ def find_rainflow_matrix(cycles, rowbins, colbins):
     ncols[cc[:, 1] == colbins[-1]] = M - 1
 
     # Build the rainflow matrix
-
     for nr, nc in zip(nrows, ncols):
         if (nr >= N) or (nr < 0) or (nc >= M) or (nc < 0):
             continue
         mat[nr, nc] += 1.
-    return mat
+
+    if return_bins:
+        return rowbins, colbins, mat
+    else:
+        return mat
 
 
 def find_rainflow_ranges(y, k=64, return_means=False):
@@ -316,7 +467,24 @@ def find_rainflow_ranges(y, k=64, return_means=False):
     ------
     ValueError
         If no rainflow cycles are found in the sequence.
+
+    Example
+    -------
+    >>> import fatpack
+    >>> import numpy as np
+    >>> np.random.seed(10)
+
+    Generate a dataseries for the example
+    
+    >>> y = np.random.normal(size=100000) * 10.
+
+    Rainflow ranges S and the corresponding mean values Sm found in the dataseries
+    are then obtained by 
+
+    >>> S, Sm = fatpack.find_rainflow_ranges(y, return_means=True)
+
     """
+
     reversals, _ = find_reversals(y, k)
     cycles_firstpass, residue = find_rainflow_cycles(reversals)
     processed_residue = concatenate_reversals(residue, residue)
@@ -378,7 +546,12 @@ def find_rainflow_ranges_strict(y, k=64, return_means=False):
     ValueError
         If no rainflow cycles are found in the sequence.
 
+    See Also
+    --------
+    find_rainflow_ranges: Faster version of this function.
+
     """
+
     reversals, _ = find_reversals_strict(y, k)
     cycles_firstpass, residue = find_rainflow_cycles(reversals)
     processed_residue = concatenate_reversals(residue, residue)
@@ -411,7 +584,7 @@ def find_range_count(ranges, bins=10, weights=None):
     bins : Optional[ndarray,int]
         If bins is a sequence, the values are treated as the left edges (and
         the rightmost edge) of the bins.
-        if bins is an int, a sequence is created diving the range `min`--`max`
+        If bins is an int, a sequence is created diving the range `min`--`max`
         of y into `bin` number of equally sized bins.
     weights : Optional[ndarray]
         Array with same size as y, can be used to account for half cycles, i.e
@@ -420,8 +593,55 @@ def find_range_count(ranges, bins=10, weights=None):
     Returns
     -------
     N, S : ndarray
-        The count and the characteristic value for the range.
+        The count and the characteristic value for the ranges.
+
+    Example
+    -------
+    >>> import fatpack
+    >>> import numpy as np
+    >>> np.random.seed(10)
+
+    Generate a dataseries for the example
+    
+    >>> y = np.random.normal(size=100000) * 10.
+
+    Extract ranges and establish the bins.
+
+    >>> ranges = fatpack.find_rainflow_ranges(y, k=256)
+    >>> bins = np.arange(0, 76., 1)
+
+    Find range count and midpoint (average) of corresponding bin
+
+    >>> N, S = fatpack.find_range_count(ranges, bins)
+
+    A figure of the range count is useful, below a bar plot of the 
+    range count is shown with matplotlib
+
+    >>> import matplotlib.pyplot as plt
+    >>> fig1 = plt.figure()
+    >>> bars = plt.bar(S, N)
+    >>> title = plt.title("Range count")
+    >>> xlab = plt.xlabel("Stress range (MPa)")
+    >>> ylab = plt.ylabel("Count (1)")
+
+    Note that the cumulative count can also be easily obtained from 
+    these results
+
+    >>> fig2 = plt.figure()
+    >>> Ncum = N.sum() - np.cumsum(N)
+    >>> cumulative_plot = plt.loglog(Ncum, S)
+    >>> title = plt.title("Cumulative plot")
+    >>> xlab = plt.xlabel("Cumulative count")
+    >>> ylab = plt.ylabel("Stress range (MPa)")
+    >>> plt.show(block=True)
+
     """
+    
     N, bns = np.histogram(ranges, bins=bins, weights=weights)
     S = bns[:-1] + np.diff(bns) / 2.
     return N, S
+
+
+if __name__ == "__main__":
+    import doctest
+    doctest.testmod()

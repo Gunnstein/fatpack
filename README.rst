@@ -28,9 +28,8 @@ or install directly from the python package index.
 Usage
 -----
 
-The package provides functions for rainflow cycle counting and
-defining endurance curves, which can easily be combined with a damage
-accumulation rule to determine the fatigue damage in a component. The
+The package provides classes and functions for rainflow cycle counting,
+defining endurance curves and racetrack filtering. The
 code example below shows how fatigue damage can be calculated:
 
 .. code:: python
@@ -39,11 +38,11 @@ code example below shows how fatigue damage can be calculated:
     import fatpack
 
 
-    # Assume that `x` is the data series, we generate one here
-    x = np.random.normal(0., 30., size=10000)
+    # Assume that `y` is the data series, we generate one here
+    y = np.random.normal(0., 30., size=10000)
 
     # Extract the stress ranges by rainflow counting
-    S = fatpack.find_rainflow_ranges(x)
+    S = fatpack.find_rainflow_ranges(y)
 
     # Determine the fatigue damage, using a trilinear fatigue curve
     # with detail category Sc, Miner's linear damage summation rule.
@@ -51,12 +50,15 @@ code example below shows how fatigue damage can be calculated:
     curve = fatpack.TriLinearEnduranceCurve(Sc)
     fatigue_damage = curve.find_miner_sum(S)
 
-An example is included (example.py) which extracts rainflow cycles,
+An example is included (`example.py <https://github.com/Gunnstein/fatpack/blob/master/example.py>`_) which extracts rainflow cycles,
 generates the rainflow matrix and rainflow stress spectrum, see the
 figure presented below. The example is a good place to start to get
-into the use of the package.
+into the use of the package. 
 
 |example_img|
+
+
+Additional examples are found in the `examples folder <https://github.com/Gunnstein/fatpack/tree/master/examples>`_.
 
 
 Support

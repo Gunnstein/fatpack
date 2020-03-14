@@ -4,6 +4,9 @@
 !example.py
 !fatpack/
 !fatpack/*.py
+!examples/
+!examples/*.ipynb
+!examples/*.py
 !*.png
 !README.rst
 !LICENSE

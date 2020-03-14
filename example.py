@@ -24,7 +24,7 @@ ranges = np.abs(cycles_total[:, 1] - cycles_total[:, 0])
 # ranges = fatpack.find_rainflow_ranges(y)
 
 figsize = np.array([140., 140.]) / 25.
-fig = plt.figure(dpi=300, figsize=figsize)
+fig = plt.figure(dpi=96, figsize=figsize)
 
 # Plotting signal with reversals.
 ax_signal = plt.subplot2grid((3, 2), (0, 0))

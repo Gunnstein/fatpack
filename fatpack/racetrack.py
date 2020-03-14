@@ -44,7 +44,9 @@ def racetrack_filter(reversals, h):
         Signal after applying racetrack filter.
     indices : ndarray
         Indices of racetrack filtered signal.
+
     """
+
     y = reversals
     yprev = None
     ix = []
@@ -90,9 +92,43 @@ def find_reversals_racetrack_filtered(y, h, k=64):
     indices : ndarray
         The indices of the initial data series `y` which corresponds
         to the reversals.
+
+    Example
+    -------
+    >>> import fatpack
+    >>> import numpy as np
+    >>> np.random.seed(10)
+
+    Generate a dataseries for the example
+    
+    >>> y = np.random.normal(size=100000) * 10.
+    
+    Extract reversals with all rainflow ranges lower than 15 removed
+
+    >>> rev_rtf, ix_rtf = fatpack.find_reversals_racetrack_filtered(y, h=15.)
+    
+    Below a figure is created which shows reversals of the dataseris with and without the racetrack 
+    filter
+
+    >>> import matplotlib.pyplot as plt
+    >>> rev, ix = fatpack.find_reversals(y)
+    >>> l1 = plt.plot(ix, rev, label='reversals')
+    >>> l2 = plt.plot(ix_rtf, rev_rtf, label='racetrack filtered reversals')
+    >>> xlim = plt.xlim(0, 100)
+    >>> leg = plt.legend(loc='best')
+    >>> xlab = plt.xlabel("Indices")
+    >>> ylab = plt.ylabel("Signal")
+    >>> plt.show(block=True)
+    
     """
+    
     _, ix = find_reversals(y, k=k)
     z, ixz = racetrack_filter(y[ix], h)
     ix = ix[ixz]
     rev, ixr = find_reversals(z, k=k)
     return y[ix[ixr]], ix[ixr]
+
+
+if __name__ == "__main__":
+    import doctest
+    doctest.testmod()
