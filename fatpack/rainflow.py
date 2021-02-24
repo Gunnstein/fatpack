@@ -413,10 +413,10 @@ def find_rainflow_matrix(data_array, rowbins, colbins, return_bins=False):
         rowbins = np.linspace(cc[:, 0].min(), cc[:, 1].max(), rowbins)
     if isinstance(colbins, int):
         colbins = np.linspace(cc[:, 1].min(), cc[:, 1].max(), colbins)
-
-    mat = np.zeros((rowbins.size-1, colbins.size-1), dtype=np.float)
-    (N, M) = mat.shape
-
+    N = rowbins.size-1
+    M = colbins.size-1
+    mat = np.zeros((N, M), dtype=np.float)
+    
     # Find bin index of each of the cycles
     nrows = np.digitize(cc[:, 0], rowbins)-1
     ncols = np.digitize(cc[:, 1], colbins)-1

@@ -312,5 +312,87 @@ class TestRaceTrackFilter(BaseArrayTestCase, unittest.TestCase):
         self.result, _ = find_reversals_racetrack_filtered(y, 2, k=64)
 
 
+class StressCorrectorTestCaseMixin(object):
+    @property
+    def S(self):
+        return np.array([10., 30., 24., 90.])
+
+    @property
+    def Sm(self):
+        return np.array([20., 40., 32., 0.])
+
+    def test_find_transformed_stress_func(self):
+        for St_est, St_true in zip(self.St_est_func, self.St_trues):
+            np.testing.assert_allclose(St_est, St_true)
+
+
+class TestWalkerMeanStressCorrector(unittest.TestCase,
+                                    StressCorrectorTestCaseMixin):
+    def setUp(self):
+        gammas = [.1, .3, .5, .7, .9, 1.0]
+
+        self.St_est_func = [
+            find_walker_equivalent_stress(self.S, self.Sm, gamma)
+            for gamma in gammas
+        ]
+        self.St_trues = np.array([
+            [42.566996, 96.597423, 77.277939, 90.0],
+            [30.851693, 74.492278, 59.593822, 90.0],
+            [22.360680, 57.445626, 45.956501, 90.0],
+            [16.206566, 44.299894, 35.439915, 90.0],
+            [11.746189, 34.162402, 27.329922, 90.0],
+            [10., 30., 24., 90.],
+        ])
+
+
+class TestSWTMeanStressCorrector(TestWalkerMeanStressCorrector):
+    def setUp(self):
+        self.St_est_func = [
+            find_swt_equivalent_stress(self.S, self.Sm)
+        ]
+        self.St_trues = np.array([
+            [22.360680, 57.445626, 45.956501, 90.0],
+        ])
+
+
+class TestMorrowMeanStressCorrector(TestWalkerMeanStressCorrector):
+    def setUp(self):
+        self.s = [510, 720]
+        self.St_est_func = [
+            find_morrow_equivalent_stress(self.S, self.Sm, sf)
+            for sf in self.s
+        ]
+        self.St_trues = np.array([
+            [10.408163, 32.553191, 25.606695, 90.0],
+            [10.285714, 31.764706, 25.116279, 90.0],
+        ])
+
+
+class TestGoodmanMeanStressCorrector(TestMorrowMeanStressCorrector):
+    def setUp(self):
+        super(TestGoodmanMeanStressCorrector, self).setUp()
+        self.St_est_func = [
+            find_goodman_equivalent_stress(self.S, self.Sm, su)
+            for su in self.s
+        ]
+
+class TestReducedCompressiveStressCorrector(TestWalkerMeanStressCorrector):
+    def setUp(self):
+        alphas = [0., .1, .3, .5, .7, .9, 1.0]
+        self.St_est_func = [
+            find_reduced_compressive_stress(self.S, self.Sm, alpha)
+            for alpha in alphas
+        ]
+        self.St_trues = np.array([
+            [10., 30., 24., 45.],
+            [10., 30., 24., 49.5],
+            [10., 30., 24., 58.5],
+            [10., 30., 24., 67.5],
+            [10., 30., 24., 76.5],
+            [10., 30., 24., 85.5],
+            [10., 30., 24., 90.0],
+            ])
+
+
 if __name__ == "__main__":
     unittest.main()

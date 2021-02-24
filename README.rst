@@ -29,8 +29,9 @@ Usage
 -----
 
 The package provides classes and functions for rainflow cycle counting,
-defining endurance curves and racetrack filtering. The
-code example below shows how fatigue damage can be calculated:
+defining endurance curves, mean and compressive stress range correction 
+and racetrack filtering. The code example below shows how fatigue damage 
+can be calculated:
 
 .. code:: python
 
