@@ -410,7 +410,7 @@ def find_rainflow_matrix(data_array, rowbins, colbins, return_bins=False):
     cc = data_array
 
     if isinstance(rowbins, int):
-        rowbins = np.linspace(cc[:, 0].min(), cc[:, 1].max(), rowbins)
+        rowbins = np.linspace(cc[:, 0].min(), cc[:, 0].max(), rowbins)
     if isinstance(colbins, int):
         colbins = np.linspace(cc[:, 1].min(), cc[:, 1].max(), colbins)
     N = rowbins.size-1
