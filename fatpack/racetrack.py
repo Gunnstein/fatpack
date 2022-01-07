@@ -59,7 +59,7 @@ def racetrack_filter(reversals, h):
         if fabs(dy) > h / 2.:
             yprev = yn - dy/fabs(dy) * h/2.
             ix.append(n)
-    ix = np.array(ix, dtype=np.int)
+    ix = np.array(ix, dtype=int)
     return y[ix], ix
 
 
@@ -100,14 +100,14 @@ def find_reversals_racetrack_filtered(y, h, k=64):
     >>> np.random.seed(10)
 
     Generate a dataseries for the example
-    
+
     >>> y = np.random.normal(size=100000) * 10.
-    
+
     Extract reversals with all rainflow ranges lower than 15 removed
 
     >>> rev_rtf, ix_rtf = fatpack.find_reversals_racetrack_filtered(y, h=15.)
-    
-    Below a figure is created which shows reversals of the dataseris with and without the racetrack 
+
+    Below a figure is created which shows reversals of the dataseris with and without the racetrack
     filter
 
     >>> import matplotlib.pyplot as plt
@@ -119,9 +119,9 @@ def find_reversals_racetrack_filtered(y, h, k=64):
     >>> xlab = plt.xlabel("Indices")
     >>> ylab = plt.ylabel("Signal")
     >>> plt.show(block=True)
-    
+
     """
-    
+
     _, ix = find_reversals(y, k=k)
     z, ixz = racetrack_filter(y[ix], h)
     ix = ix[ixz]

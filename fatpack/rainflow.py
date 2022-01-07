@@ -158,10 +158,10 @@ def find_reversals(y, k=64):
     >>> np.random.seed(10)
 
     Generate a dataseries for the example
-    
+
     >>> y = np.random.normal(size=100000) * 10.
 
-    The reversals (peaks and valleys) and corresponding indices are then obtained by 
+    The reversals (peaks and valleys) and corresponding indices are then obtained by
 
     >>> reversals, indices = fatpack.find_reversals(y)
 
@@ -212,9 +212,9 @@ def concatenate_reversals(reversals1, reversals2):
     >>> np.random.seed(10)
 
     Generate two dataseries for the example
-    
+
     >>> y1 = np.random.normal(size=50000) * 10.
-    >>> y2 = np.random.normal(size=50000) * 10. 
+    >>> y2 = np.random.normal(size=50000) * 10.
 
     Find the reversals in the dataseries
 
@@ -266,7 +266,7 @@ def find_rainflow_cycles(reversals):
     >>> np.random.seed(10)
 
     Generate a dataseries for the example
-    
+
     >>> y = np.random.normal(size=100000) * 10.
 
     First we must find the reversals in the dataseries
@@ -279,7 +279,7 @@ def find_rainflow_cycles(reversals):
 
     The residual after the first pass of the rainflow algorithm contains open
     rainflow cycles. If the dataseries y represents a repeating process, these cycles
-    are closed on the next repetition and should be included in the cycle count by 
+    are closed on the next repetition and should be included in the cycle count by
     concatenating the reversals in the residual with itself and rainflow cycle counting
     is applied once more. The process of extracting the rainflow cycles from the residue
     is shown below
@@ -333,26 +333,26 @@ def find_rainflow_matrix(data_array, rowbins, colbins, return_bins=False):
 
     rowbins, colbins : ndarray or int
         The edges of the bins for classifying the data_array into the rainflow
-        matrix. 
+        matrix.
         - If bins is a sequence, the values are treated as the left edges (and
-        the rightmost edge) of the bins. These arrays must increase monotonically 
+        the rightmost edge) of the bins. These arrays must increase monotonically
         and data values outside the range of the bins are ignored.
         - If bins is an int, a sequence is created diving the range `min`--`max`
-        of y into `bin` number of equally sized bins. 
+        of y into `bin` number of equally sized bins.
 
     return_bins : Optional[bool]
-        If true, row and column bins are also returned together with the rainflow 
+        If true, row and column bins are also returned together with the rainflow
         matrix
 
     Returns
     -------
     rfcmat : 2darray
         Rainflow matrix corresponding to the row and colbins.
-    
+
     or if return_bins is True:
 
     rowbins, colbins, rfcmat : 1darray, 1darray, 2darray
-        Rainflow matrix and the corresponding row and column bins. 
+        Rainflow matrix and the corresponding row and column bins.
 
     Raises
     ------
@@ -366,7 +366,7 @@ def find_rainflow_matrix(data_array, rowbins, colbins, return_bins=False):
     >>> np.random.seed(10)
 
     Generate a dataseries for the example
-    
+
     >>> y = np.random.normal(size=100000) * 10.
 
     Let us create a mean-stress vs stress-range rainflow matrix,
@@ -379,7 +379,7 @@ def find_rainflow_matrix(data_array, rowbins, colbins, return_bins=False):
     >>> bins_S = np.arange(0., 76., 1)
     >>> bins_Sm = np.arange(-25., 26., 1.)
 
-    and establish the data array. Note that other datavectors vectors, e.g. 
+    and establish the data array. Note that other datavectors vectors, e.g.
     Smin and Smax, may also be used to create other data arrays and
     resulting rainflow matrices.
 
@@ -390,7 +390,7 @@ def find_rainflow_matrix(data_array, rowbins, colbins, return_bins=False):
 
     >>> rfcmat = fatpack.find_rainflow_matrix(data_array, bins_Sm, bins_S)
 
-    A figure of the rainflow matrix is useful, first find the coordinates of 
+    A figure of the rainflow matrix is useful, first find the coordinates of
     each element in the rainflow matrix
 
     >>> X, Y = np.meshgrid(bins_Sm, bins_S, indexing='ij')
@@ -415,8 +415,8 @@ def find_rainflow_matrix(data_array, rowbins, colbins, return_bins=False):
         colbins = np.linspace(cc[:, 1].min(), cc[:, 1].max(), colbins)
     N = rowbins.size-1
     M = colbins.size-1
-    mat = np.zeros((N, M), dtype=np.float)
-    
+    mat = np.zeros((N, M), dtype=float)
+
     # Find bin index of each of the cycles
     nrows = np.digitize(cc[:, 0], rowbins)-1
     ncols = np.digitize(cc[:, 1], colbins)-1
@@ -475,11 +475,11 @@ def find_rainflow_ranges(y, k=64, return_means=False):
     >>> np.random.seed(10)
 
     Generate a dataseries for the example
-    
+
     >>> y = np.random.normal(size=100000) * 10.
 
     Rainflow ranges S and the corresponding mean values Sm found in the dataseries
-    are then obtained by 
+    are then obtained by
 
     >>> S, Sm = fatpack.find_rainflow_ranges(y, return_means=True)
 
@@ -602,7 +602,7 @@ def find_range_count(ranges, bins=10, weights=None):
     >>> np.random.seed(10)
 
     Generate a dataseries for the example
-    
+
     >>> y = np.random.normal(size=100000) * 10.
 
     Extract ranges and establish the bins.
@@ -614,7 +614,7 @@ def find_range_count(ranges, bins=10, weights=None):
 
     >>> N, S = fatpack.find_range_count(ranges, bins)
 
-    A figure of the range count is useful, below a bar plot of the 
+    A figure of the range count is useful, below a bar plot of the
     range count is shown with matplotlib
 
     >>> import matplotlib.pyplot as plt
@@ -624,7 +624,7 @@ def find_range_count(ranges, bins=10, weights=None):
     >>> xlab = plt.xlabel("Stress range (MPa)")
     >>> ylab = plt.ylabel("Count (1)")
 
-    Note that the cumulative count can also be easily obtained from 
+    Note that the cumulative count can also be easily obtained from
     these results
 
     >>> fig2 = plt.figure()
@@ -636,7 +636,7 @@ def find_range_count(ranges, bins=10, weights=None):
     >>> plt.show(block=True)
 
     """
-    
+
     N, bns = np.histogram(ranges, bins=bins, weights=weights)
     S = bns[:-1] + np.diff(bns) / 2.
     return N, S
