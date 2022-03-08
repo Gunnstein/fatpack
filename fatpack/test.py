@@ -90,6 +90,11 @@ class TestConcatenateResidue(BaseArrayTestCase, unittest.TestCase):
         residue = TESTDATA['residue']
         self.result = concatenate_reversals(residue, residue)
 
+    def test_non_reversals(self):
+        residue = np.array([0., 1., -1., 2., 2.])
+        with self.assertRaises(ValueError):
+            concatenate_reversals(residue, residue)
+
 
 class TestFindRainflowCycles(unittest.TestCase):
     def setUp(self):

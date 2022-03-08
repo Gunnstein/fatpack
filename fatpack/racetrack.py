@@ -32,7 +32,7 @@ def racetrack_filter(reversals, h):
 
     Arguments
     ---------
-    reversals : ndarray
+    reversals : 1darray
         An 1D-array of reversals.
     h : float
         Racetrack width, cycles with range lower than width are
@@ -40,9 +40,9 @@ def racetrack_filter(reversals, h):
 
     Returns
     -------
-    signal : ndarray
+    signal : 1darray
         Signal after applying racetrack filter.
-    indices : ndarray
+    indices : 1darray
         Indices of racetrack filtered signal.
 
     """
@@ -75,7 +75,7 @@ def find_reversals_racetrack_filtered(y, h, k=64):
 
     Arguments
     ---------
-    y : ndarray
+    y : 1darray
         Dataseries containing the signal to find the reversals for.
     h : float
         Racetrack width, cycles with range lower than width are
@@ -86,10 +86,10 @@ def find_reversals_racetrack_filtered(y, h, k=64):
 
     Returns
     -------
-    reversals : ndarray
+    reversals : 1darray
         Reversals of the initial data series `y` after racetrack
         filtering.
-    indices : ndarray
+    indices : 1darray
         The indices of the initial data series `y` which corresponds
         to the reversals.
 

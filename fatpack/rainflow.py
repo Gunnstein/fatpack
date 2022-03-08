@@ -59,7 +59,7 @@ def find_reversals_strict(y, k=64):
 
     Arguments
     ---------
-    y : ndarray
+    y : 1darray
         Dataseries containing the signal to find the reversals for.
     k : int
         The number of intervals to divide the min-max range of the dataseries
@@ -67,9 +67,9 @@ def find_reversals_strict(y, k=64):
 
     Returns
     -------
-    reversals : ndarray
+    reversals : 1darray
         The reversals of the initial data series `y`.
-    indices : ndarray
+    indices : 1darray
         The indices of the initial data series `y` which corresponds to the
         reversals.
 
@@ -137,7 +137,7 @@ def find_reversals(y, k=64):
 
     Arguments
     ---------
-    y : ndarray
+    y : 1darray
         Dataseries containing the signal to find the reversals for.
     k : int
         The number of intervals to divide the min-max range of the dataseries
@@ -145,9 +145,9 @@ def find_reversals(y, k=64):
 
     Returns
     -------
-    reversals : ndarray
+    reversals : 1darray
         The reversals of the initial data series `y`.
-    indices : ndarray
+    indices : 1darray
         The indices of the initial data series `y` which corresponds to the
         reversals.
 
@@ -197,13 +197,19 @@ def concatenate_reversals(reversals1, reversals2):
 
     Arguments
     ---------
-    reversals1, reversals2 : ndarray
+    reversals1, reversals2 : 1darray
     The sequence reversal1 is put first, i.e before reversal2
 
     Returns
     -------
-    ndarray
+    1darray
         Sequence of reversals of the concatenated sequences.
+
+    Raises
+    ------
+    ValueError
+        If the end/beginning of inputs 'reversals1'/'reversals2' are not
+        reversals.
 
     Example
     -------
@@ -239,6 +245,9 @@ def concatenate_reversals(reversals1, reversals2):
         result = (R1, R2[1:])
     elif (t1 < 0) and (t2 < 0):
         result = (R1[:-1], R2)
+    else:
+        raise ValueError(
+            "Input must be reversals, end/start value of reversals1/reversals2 repeated.")
     return np.concatenate(result)
 
 
@@ -247,15 +256,15 @@ def find_rainflow_cycles(reversals):
 
     Arguments
     ---------
-    reversals : ndarray
+    reversals : 1darray
         An 1D-array of reversals.
 
     Returns
     -------
-    rainflow_cycles : ndarray
+    rainflow_cycles : 2darray
         A (Nx2)-array where the first / second column contains the
         starting / destination point of a rainflow cycle.
-    residue : ndarray
+    residue : 1darray
         The residue of the reversal series after one pass of the rainflow
         algorithm.
 
@@ -326,12 +335,12 @@ def find_rainflow_matrix(data_array, rowbins, colbins, return_bins=False):
 
     Arguments
     ---------
-    data_array : ndarray
+    data_array : 2darray
         (N x 2) array where the first column determines the row index and the
         second column the column index according to `rowbins` and `colbins`,
         respectively.
 
-    rowbins, colbins : ndarray or int
+    rowbins, colbins : 1darray or int
         The edges of the bins for classifying the data_array into the rainflow
         matrix.
         - If bins is a sequence, the values are treated as the left edges (and
@@ -340,7 +349,7 @@ def find_rainflow_matrix(data_array, rowbins, colbins, return_bins=False):
         - If bins is an int, a sequence is created diving the range `min`--`max`
         of y into `bin` number of equally sized bins.
 
-    return_bins : Optional[bool]
+    return_bins : bool, optional
         If true, row and column bins are also returned together with the rainflow
         matrix
 
@@ -458,9 +467,9 @@ def find_rainflow_ranges(y, k=64, return_means=False):
 
     Returns
     -------
-    ranges : ndarray
+    ranges : 1darray
         The ranges identified by the rainflow algorithm in the dataseries.
-    means : Optional[ndarray]
+    means : 1darray, optional
         The mean values for each range.
 
     Raises
@@ -536,9 +545,9 @@ def find_rainflow_ranges_strict(y, k=64, return_means=False):
 
     Returns
     -------
-    ranges : ndarray
+    ranges : 1darray
         The ranges identified by the rainflow algorithm in the dataseries.
-    means : Optional[ndarray]
+    means : 1darray, optional
         The mean values for each range.
 
     Raises
@@ -579,20 +588,20 @@ def find_range_count(ranges, bins=10, weights=None):
 
     Arguments
     ---------
-    ranges : ndarray
+    ranges : 1darray
         Array with the values to be counted
-    bins : Optional[ndarray,int]
+    bins : 1darray, int, optional
         If bins is a sequence, the values are treated as the left edges (and
         the rightmost edge) of the bins.
         If bins is an int, a sequence is created diving the range `min`--`max`
         of y into `bin` number of equally sized bins.
-    weights : Optional[ndarray]
+    weights : 1darray, optional
         Array with same size as y, can be used to account for half cycles, i.e
         applying a weight of 0.5 to a value in yields a counting value of 0.5
 
     Returns
     -------
-    N, S : ndarray
+    N, S : 1darray
         The count and the characteristic value for the ranges.
 
     Example
