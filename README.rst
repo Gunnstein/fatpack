@@ -1,9 +1,12 @@
 |logo_img|
-
+   
 =======
 fatpack
 =======
-
+ 
+.. image:: https://zenodo.org/badge/113768119.svg
+   :target: https://zenodo.org/badge/latestdoi/113768119
+   
 Python package for fatigue analysis of data series. The package
 requires `numpy`.
 
