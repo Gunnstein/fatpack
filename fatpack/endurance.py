@@ -7,7 +7,7 @@ import numpy as np
 
 
 __all__ = ["LinearEnduranceCurve", "BiLinearEnduranceCurve",
-           "TriLinearEnduranceCurve"]
+           "TriLinearEnduranceCurve", "QuadLinearEnduranceCurve", "BiLinearEnduranceCurveFlat"]
 
 
 def ensure_array(method):
@@ -181,7 +181,7 @@ class LinearEnduranceCurve(AbstractEnduranceCurve):
     The damage in signal y is D=6.56e-05
 
     Finally, we can create a figure of the endurance curve with matplotlib
-    
+
     >>> import matplotlib.pyplot as plt
     >>> N = np.logspace(4, 9, 1000)
     >>> S = curve.get_stress(N)
@@ -263,7 +263,7 @@ class BiLinearEnduranceCurve(AbstractEnduranceCurve):
     The damage in signal y is D=1.19e-04
 
     Finally, we can create a figure of the endurance curve with matplotlib
-    
+
     >>> import matplotlib.pyplot as plt
     >>> N = np.logspace(4, 9, 1000)
     >>> S = curve.get_stress(N)
@@ -325,6 +325,101 @@ class BiLinearEnduranceCurve(AbstractEnduranceCurve):
         return self.curve2.C
 
 
+class BiLinearEnduranceCurveFlat(AbstractEnduranceCurve):
+    """Define a bilinear endurance curve.
+
+            ^                log N - log S
+            |
+            |*
+            | *  m1
+            |  *- -+
+            |   *  .
+     S   Sc +- - * . 1
+     t      |    .*.
+     r      |    . *
+     e      |    .  *
+     s   Sd +- - - - *  *  *  *  *  *  *  *  *
+     s      |    .    
+            |----|----|---------------------------------->
+                 Nc   Nd
+                             Endurance
+
+
+    The slope parameter (m1), endurance value at the knee point
+    of the bilinear curve (Nd) and the `detail category` or
+    `characteristic` stress and endurance (Sc, Nc) is used to define
+    the bilinear curve. The default values for the characteristic
+    endurance `Nc` (2.0e6) and the slope `m` (5.0) properties can be
+    adjusted on the instance and class.
+
+    Example
+    -------
+    >>> import fatpack
+    >>> import numpy as np
+    >>> np.random.seed(10)
+
+    First we create an endurance curve with detail category 90.
+    >>> curve = fatpack.BiLinearEnduranceCurve(90.)
+
+    Let us find the damage according to Miner's linear damage rule from
+    a rainflow counted signal y
+
+    >>> y = np.random.normal(size=100000) * 10.
+    >>> S = fatpack.find_rainflow_ranges(y)
+    >>> D = curve.find_miner_sum(S)
+    >>> print("The damage in signal y is D={0:3.2e}".format(D))
+    The damage in signal y is D=1.19e-04
+
+    Finally, we can create a figure of the endurance curve with matplotlib
+
+    >>> import matplotlib.pyplot as plt
+    >>> N = np.logspace(4, 9, 1000)
+    >>> S = curve.get_stress(N)
+    >>> line = plt.loglog(N, S)
+    >>> grd = plt.grid(which='both')
+    >>> title = plt.title("Bi linear endurance curve")
+    >>> xlab = plt.xlabel("Cycles to failure (1)")
+    >>> ylab = plt.ylabel("Stress range (MPa)")
+    >>> plt.show(block=True)
+
+    """
+
+    Nc = 2.0e6
+    Nd = 5.0e6
+    m1 = 3.0
+
+    @property
+    def Sd(self):
+        return self.Sc * (self.Nc / self.Nd) ** (1. / self.m1)
+
+    @property
+    def curve1(self):
+        curve = LinearEnduranceCurve(self.Sc)
+        curve.Nc = self.Nc
+        curve.m = self.m1
+        return curve
+
+    @ensure_array
+    def get_endurance(self, S):
+        Sd = self.Sd
+        N = np.ones_like(S) * self.Ninf
+        N[S > Sd] = self.curve1.get_endurance(S[S > Sd])
+        N[S < self.Sd] = self.Ninf
+        return N
+
+    @ensure_array
+    def get_stress(self, N):
+        S = np.zeros_like(N)
+        S[N <= self.Nd] = self.curve1.get_stress(N[N <= self.Nd])
+        S[N > self.Nd] = self.curve1.get_stress(self.Nd)
+        return S
+
+    @property
+    def C1(self):
+        """Intercept constant for the first slope."""
+        return self.curve1.C
+
+
 class TriLinearEnduranceCurve(BiLinearEnduranceCurve):
     """Define a trilinear endurance curve.
             ^                log N - log S
@@ -371,7 +466,7 @@ class TriLinearEnduranceCurve(BiLinearEnduranceCurve):
     The damage in signal y is D=9.23e-05
 
     Finally, we can create a figure of the endurance curve with matplotlib
-    
+
     >>> import matplotlib.pyplot as plt
     >>> N = np.logspace(4, 9, 1000)
     >>> S = curve.get_stress(N)
@@ -383,7 +478,7 @@ class TriLinearEnduranceCurve(BiLinearEnduranceCurve):
     >>> plt.show(block=True)
 
     """
-    
+
     Nc = 2.0e6
     Nd = 5.0e6
     Nl = 1.0e8
@@ -398,7 +493,7 @@ class TriLinearEnduranceCurve(BiLinearEnduranceCurve):
     @ensure_array
     def get_endurance(self, S):
         N = super(TriLinearEnduranceCurve, self).get_endurance(S)
-        N[S<self.Sl] = self.Ninf
+        N[S < self.Sl] = self.Ninf
         return N
 
     @ensure_array
@@ -411,3 +506,187 @@ class TriLinearEnduranceCurve(BiLinearEnduranceCurve):
 if __name__ == "__main__":
     import doctest
     doctest.testmod()
+
+
+class QuadLinearEnduranceCurve(AbstractEnduranceCurve):
+    """Define a quadlinear endurance curve.
+
+            ^                log N - log S
+            |
+            |*
+            | *  m1
+            |  *- -+
+            |   *  .
+     S   Sc +- - * . 1
+     t      |    .*.
+     r      |    . *
+     e      |    .  *
+     s   Sd +- - - - *
+     s      |    .    . *      m2
+            |    .    .    * - - - -+
+            |    .    .       *     . 1
+            |    .    .          *  .
+            |    .    .             *
+            |    .    .                *
+         Sl +- - - - - - - - - - - - - - -*
+                 .    .                 .  *
+            |    .    .                 .   *  m3
+            |    .    .                 .    *- -+
+            |    .    .                 .     *  . 1
+     S           .    .                 .      * .
+     t      |    .    .                 .       *.
+     r      |    .    .                 .        *
+     e      |    .    .                 .         *
+     s   Sk +- - - - - - - - - - - - - - - - - - - *
+     s      |    .    .                 .          . *      m4
+            |    .    .                 .          .    * - - - -+
+            |    .    .                 .          .       *     . 1
+            |    .    .                 .          .          *  .
+            |    .    .                 .          .             *
+            |    .    .                 .          .                *
+            |    .    .                 .          .                   *                                
+            |----|----|-----------------|----------|---------------------->
+                 Nc   Nd                Nl         Nk
+                             Endurance
+
+
+    The slope parameters (m1, m2, m3, m4), endurance value at the knee points
+    of the quadlinear curve (Nd, Nl, Nk) and the `detail category` or
+    `characteristic` stress and endurance (Sc, Nc) is used to define
+    the quadlinear curve. 
+
+    Example
+    -------
+    >>> import fatpack
+    >>> import numpy as np
+    >>> np.random.seed(10)
+
+    First we create an endurance curve with detail category 90.
+    >>> curve = fatpack.BiLinearEnduranceCurve(90.)
+
+    Let us find the damage according to Miner's linear damage rule from
+    a rainflow counted signal y
+
+    >>> y = np.random.normal(size=100000) * 10.
+    >>> S = fatpack.find_rainflow_ranges(y)
+    >>> D = curve.find_miner_sum(S)
+    >>> print("The damage in signal y is D={0:3.2e}".format(D))
+    The damage in signal y is D=1.19e-04
+
+    Finally, we can create a figure of the endurance curve with matplotlib
+
+    >>> import matplotlib.pyplot as plt
+    >>> N = np.logspace(4, 9, 1000)
+    >>> S = curve.get_stress(N)
+    >>> line = plt.loglog(N, S)
+    >>> grd = plt.grid(which='both')
+    >>> title = plt.title("Bi linear endurance curve")
+    >>> xlab = plt.xlabel("Cycles to failure (1)")
+    >>> ylab = plt.ylabel("Stress range (MPa)")
+    >>> plt.show(block=True)
+
+    """
+
+    Nc = 2e5
+    Nd = 1e6
+    Nl = 10e6
+    Nk = 5*10e6
+
+    m1 = 3.0
+    m2 = 5.0
+    m3 = 3.0
+    m4 = 3.0
+
+    @property
+    def Sd(self):
+        return self.Sc * (self.Nc / self.Nd) ** (1. / self.m1)
+
+    @property
+    def Sl(self):
+        return self.Sd * (self.Nd / self.Nl) ** (1. / self.m2)
+
+    @property
+    def Sk(self):
+        return self.Sl * (self.Nl / self.Nk) ** (1. / self.m3)
+
+    @property
+    def curve1(self):
+        curve = LinearEnduranceCurve(self.Sc)
+        curve.Nc = self.Nc
+        curve.m = self.m1
+        return curve
+
+    @property
+    def curve2(self):
+        curve = LinearEnduranceCurve(self.Sd)
+        curve.Nc = self.Nd
+        curve.m = self.m2
+        return curve
+
+    @property
+    def curve3(self):
+        curve = LinearEnduranceCurve(self.Sl)
+        curve.Nc = self.Nl
+        curve.m = self.m3
+        return curve
+
+    @property
+    def curve4(self):
+        curve = LinearEnduranceCurve(self.Sk)
+        curve.Nc = self.Nk
+        curve.m = self.m4
+        return curve
+
+    @ensure_array
+    def get_endurance(self, S):
+        Sd = self.Sd
+        Sl = self.Sl
+        Sk = self.Sk
+        N = np.ones_like(S) * self.Ninf
+        for index, s in enumerate(S):
+            if s > Sd:
+                N[index] = self.curve1.get_endurance(s)
+            elif s > Sl:
+                N[index] = self.curve2.get_endurance(s)
+            elif s > Sk:
+                N[index] = self.curve3.get_endurance(s)
+            else:
+                N[index] = self.curve4.get_endurance(s)
+        return N
+
+    @ensure_array
+    def get_stress(self, N):
+        S = np.zeros_like(N)
+        Nd = self.Nd
+        Nl = self.Nl
+        Nk = self.Nk
+        for index, n in enumerate(N):
+            if n <= Nd:
+                S[index] = self.curve1.get_stress(n)
+            elif n <= Nl:
+                S[index] = self.curve2.get_stress(n)
+            elif n <= Nk:
+                S[index] = self.curve3.get_stress(n)
+            else:
+                S[index] = self.curve4.get_stress(n)
+        return S
+
+    @property
+    def C1(self):
+        """Intercept constant for the first slope."""
+        return self.curve1.C
+
+    @property
+    def C2(self):
+        """Intercept constant for the second slope."""
+        return self.curve2.C
+
+    @property
+    def C3(self):
+        """Intercept constant for the first slope."""
+        return self.curve3.C
+
+    @property
+    def C4(self):
+        """Intercept constant for the second slope."""
+        return self.curve4.C
