@@ -446,7 +446,7 @@ def find_rainflow_matrix(data_array, rowbins, colbins, return_bins=False):
         return mat
 
 
-def find_rainflow_ranges(y, k=64, return_means=False):
+def find_rainflow_ranges(y, k=64, return_means=False, return_cycles=False):
     """Returns the ranges of the complete series (incl. residue)
 
     Returns the ranges by first determining the reversals of the dataseries
@@ -464,6 +464,8 @@ def find_rainflow_ranges(y, k=64, return_means=False):
         into.
     return_means : bool
         Return mean for each rainflow range.
+    return_cycles : bool
+        Return cycles for each mean-range - pair.
 
     Returns
     -------
@@ -471,6 +473,8 @@ def find_rainflow_ranges(y, k=64, return_means=False):
         The ranges identified by the rainflow algorithm in the dataseries.
     means : 1darray, optional
         The mean values for each range.
+    cycles : 1darray, optional
+        The cycles for each mean-range - pair.
 
     Raises
     ------
@@ -491,6 +495,14 @@ def find_rainflow_ranges(y, k=64, return_means=False):
     are then obtained by
 
     >>> S, Sm = fatpack.find_rainflow_ranges(y, return_means=True)
+    
+    Optionally, the cycles N for each mean-range pair are also returned by
+    
+    >>> S, N = fatpack.find_rainflow_ranges(y, return_cycles=True)
+    
+    or
+    
+    >>> S, Sm, N = fatpack.find_rainflow_ranges(y, return_means=True, return_cycles=True)
 
     """
 
@@ -509,11 +521,19 @@ def find_rainflow_ranges(y, k=64, return_means=False):
     else:
         raise ValueError("Could not find any cycles in sequence")
     ranges = np.abs(cycles[:, 1] - cycles[:, 0])
+    out = ranges
     if return_means:
         means = 0.5 * (cycles[:, 0] + cycles[:, 1])
-        return ranges, means
+        if return_cycles:
+            out = ranges, means, cycles
+        else:
+            out = ranges, means
     else:
-        return ranges
+        if return_cycles:
+            out = ranges, cycles
+        else:
+            out = ranges
+    return out
 
 
 def find_rainflow_ranges_strict(y, k=64, return_means=False):
