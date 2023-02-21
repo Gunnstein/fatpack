@@ -465,7 +465,7 @@ def find_rainflow_ranges(y, k=64, return_means=False, return_cycles=False):
     return_means : bool
         Return mean for each rainflow range.
     return_cycles : bool
-        Return cycles for each mean-range - pair.
+        Return cycles as starting / destination point for each rainflow cycle.
 
     Returns
     -------
@@ -473,8 +473,9 @@ def find_rainflow_ranges(y, k=64, return_means=False, return_cycles=False):
         The ranges identified by the rainflow algorithm in the dataseries.
     means : 1darray, optional
         The mean values for each range.
-    cycles : 1darray, optional
-        The cycles for each mean-range - pair.
+    cycles : 2darray, optional
+        A (Nx2)-array where the first / second column contains the
+        starting / destination point of a rainflow cycle.
 
     Raises
     ------
