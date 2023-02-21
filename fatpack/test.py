@@ -46,6 +46,20 @@ TESTDATA = dict(
                                            6.242188, 8.304688, 3.921875, 7.703125,
                                            6.070312, 5.210938, 5.640625, 5.296875,
                                            6.585938, 6.50]),
+            ranges_total_means_cycles = np.array([[ 9.765625,  9.59375 ],
+                                                  [ 5.125,     8.5625  ],
+                                                  [ 3.0625,    4.4375  ],
+                                                  [ 2.203125,  2.375   ],
+                                                  [10.28125,   2.203125],
+                                                  [ 5.46875,  11.140625],
+                                                  [ 4.265625,  3.578125],
+                                                  [ 9.421875,  5.984375],
+                                                  [ 3.921875,  8.21875 ],
+                                                  [ 6.15625,   4.265625],
+                                                  [ 3.921875,  7.359375],
+                                                  [ 8.5625,    2.03125 ],
+                                                  [12.,        1.171875],
+                                                  [ 1.,       12.      ]]),
             ranges_count = np.array([2, 1, 1, 3, 0, 1, 1, 1, 0, 0, 2, 0]),
             classes = np.array([1., 2., 3., 4., 5., 6.,
                                 7., 8., 9., 10., 11., 12.]),
@@ -152,6 +166,26 @@ class TestFindRainflowRangesMeans(unittest.TestCase):
         self.result_true = TESTDATA['ranges_total_means']
         _, self.result = find_rainflow_ranges(
             TESTDATA['dataseries'], k=64, return_means=True)
+
+    def test_almost_equal(self):
+        np.testing.assert_allclose(self.result, self.result_true, rtol=1e-6)
+
+
+class TestFindRainflowRangesCycles(unittest.TestCase):
+    def setUp(self):
+        self.result_true = TESTDATA['ranges_total_means_cycles']
+        _, self.result = find_rainflow_ranges(
+            TESTDATA['dataseries'], k=64, return_cycles=True)
+
+    def test_almost_equal(self):
+        np.testing.assert_allclose(self.result, self.result_true, rtol=1e-6)
+
+
+class TestFindRainflowRangesMeansCycles(unittest.TestCase):
+    def setUp(self):
+        self.result_true = TESTDATA['ranges_total_means_cycles']
+        _, _, self.result = find_rainflow_ranges(
+            TESTDATA['dataseries'], k=64, return_means=True, return_cycles=True)
 
     def test_almost_equal(self):
         np.testing.assert_allclose(self.result, self.result_true, rtol=1e-6)
