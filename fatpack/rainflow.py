@@ -510,7 +510,7 @@ def find_rainflow_ranges(y, k=64, return_means=False, return_cycles=False):
     reversals, _ = find_reversals(y, k)
     cycles_firstpass, residue = find_rainflow_cycles(reversals)
     processed_residue = concatenate_reversals(residue, residue)
-    cycles_open_sequence, _ = find_rainflow_cycles(processed_residue)
+    cycles_open_sequence = find_rainflow_cycles(processed_residue)[0][:, ::-1]
     found_cycles_firstpass = len(cycles_firstpass.shape) == 2
     found_cycles_open_sequence = len(cycles_open_sequence.shape) == 2
     if found_cycles_firstpass and found_cycles_open_sequence:
