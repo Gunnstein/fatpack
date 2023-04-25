@@ -322,16 +322,12 @@ def find_rainflow_cycles(reversals):
     return np.array(result), np.array(residue)
 
 
-def find_rainflow_matrix(data_array, rowbins, colbins, return_bins=False):
-    """Return the rainflowmatrix for the data in data_array
+def find_rainflow_matrix(data_array, rowbins, colbins, counts=None, 
+                         return_bins=False):
+    """Return the rainflow matrix for the data in data_array
 
     The data in the first and second column of data_array are binned into
     the row and column of the rainflow matrix, respectively.
-
-    The classification includes the smallest bin edge, i.e if the bins are
-    strictly increasing, bin_i < bin_i+1, and the classification of value x is
-    `bin_i <= x < bin_i+1` for all bins except the rightmost bin. Data lying
-    **on** the rightmost bin edge are included in the last bin.
 
     Arguments
     ---------
@@ -344,14 +340,19 @@ def find_rainflow_matrix(data_array, rowbins, colbins, return_bins=False):
         The edges of the bins for classifying the data_array into the rainflow
         matrix.
         - If bins is a sequence, the values are treated as the left edges (and
-        the rightmost edge) of the bins. These arrays must increase monotonically
-        and data values outside the range of the bins are ignored.
-        - If bins is an int, a sequence is created diving the range `min`--`max`
-        of y into `bin` number of equally sized bins.
+          the rightmost edge) of the bins. These arrays must increase 
+          monotonically and data values outside the range of the bins are 
+          ignored.
+        - If bins is an int, a sequence is created diving the range min-max
+          into `bin` number of equally sized bins.
+    
+    counts : 1darray, optional
+        Array of size (N) with counts of occurances of each data pair in data 
+        array. If `None`, one occurance of each data pair is assumed.
 
     return_bins : bool, optional
-        If true, row and column bins are also returned together with the rainflow
-        matrix
+        If true, row and column bins are also returned together with the 
+        rainflow matrix
 
     Returns
     -------
@@ -415,30 +416,15 @@ def find_rainflow_matrix(data_array, rowbins, colbins, return_bins=False):
     >>> plt.show(block=True)
 
     """
-
-    cc = data_array
+    Srow = data_array[:, 0]
+    Scol = data_array[:, 1]
 
     if isinstance(rowbins, int):
-        rowbins = np.linspace(cc[:, 0].min(), cc[:, 0].max(), rowbins)
+        rowbins = np.linspace(Srow.min(), Srow.max(), rowbins)
     if isinstance(colbins, int):
-        colbins = np.linspace(cc[:, 1].min(), cc[:, 1].max(), colbins)
-    N = rowbins.size-1
-    M = colbins.size-1
-    mat = np.zeros((N, M), dtype=float)
-
-    # Find bin index of each of the cycles
-    nrows = np.digitize(cc[:, 0], rowbins)-1
-    ncols = np.digitize(cc[:, 1], colbins)-1
-
-    # Include values on the rightmost edge in the last bin
-    nrows[cc[:, 0] == rowbins[-1]] = N - 1
-    ncols[cc[:, 1] == colbins[-1]] = M - 1
-
-    # Build the rainflow matrix
-    for nr, nc in zip(nrows, ncols):
-        if (nr >= N) or (nr < 0) or (nc >= M) or (nc < 0):
-            continue
-        mat[nr, nc] += 1.
+        colbins = np.linspace(Scol.min(), Scol.max(), colbins)
+    mat, _, _ = np.histogram2d(Srow, Scol, [rowbins, colbins], 
+                               weights=counts)
 
     if return_bins:
         return rowbins, colbins, mat
