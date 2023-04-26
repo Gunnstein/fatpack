@@ -14,25 +14,32 @@ requires `numpy`.
 Installation
 ------------
 
-Either download the repository to your computer and install, e.g. by **pip**
+Either install from the github repository (latest version),
 
 ::
 
-   pip install .
+   pip install git+https://github.com/gunnstein/fatpack.git
 
 
-or install directly from the python package index.
+install from the python package index
 
 ::
 
    pip install fatpack
 
 
+or from the conda-forge:
+
+::
+
+   conda install --channel=conda-forge fatpack
+
+
 Usage
 -----
 
-The package provides classes and functions for rainflow cycle counting,
-defining endurance curves, mean and compressive stress range correction 
+The package provides functionality for rainflow cycle counting, defining 
+endurance curves, mean and compressive stress range correction 
 and racetrack filtering. The code example below shows how fatigue damage 
 can be calculated:
 
