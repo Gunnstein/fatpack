@@ -1,6 +1,5 @@
 *
-!setup.py
-!setup.cfg
+!pyproject.toml
 !example.py
 !fatpack/
 !fatpack/*.py

@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "fatpack"
+description = "Fatigue analysis in python"
+readme = "README.rst"
+license = {file = "LICENSE"}
+authors = [
+    {name = "Gunnstein T. Frøseth", email = "gunnstein@mailbox.org"},
+]
+classifiers = [
+    "License :: OSI Approved :: ISC License (ISCL)",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Topic :: Scientific/Engineering",
+]
+dependencies = [
+    "numpy",
+]
+dynamic = ["version"]
+
+[project.urls]
+repository = "https://github.com/gunnstein/fatpack"
+
+[tool.setuptools]
+packages = ["fatpack"]
+
+[tool.setuptools.dynamic]
+version = {attr = "fatpack.__version__"}
