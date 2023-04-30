@@ -29,3 +29,12 @@ packages = ["fatpack"]
 
 [tool.setuptools.dynamic]
 version = {attr = "fatpack.__version__"}
+
+[tool.tox]
+legacy_tox_ini = """
+    [tox]
+    env_list = python27, py3
+
+    [testenv]
+    commands = python -m unittest discover
+"""
