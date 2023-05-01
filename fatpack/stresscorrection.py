@@ -62,7 +62,7 @@ def find_walker_equivalent_stress(S, Sm, gamma):
     >>> np.random.seed(10)
 
     Generate a dataseries for the example
-    
+
     >>> y = np.random.normal(size=100000) * 10. + 15.
 
     Let us create a mean-stress vs stress-range rainflow matrix,
@@ -81,7 +81,7 @@ def find_walker_equivalent_stress(S, Sm, gamma):
 
     >>> St = fatpack.find_walker_equivalent_stress(S, Sm, 0.4)
 
-    and then we can calculate the damage for the transformed equivalent stress 
+    and then we can calculate the damage for the transformed equivalent stress
     with the help of an endurance curve.
 
     >>> curve = fatpack.LinearEnduranceCurve(90.)
@@ -127,7 +127,7 @@ def find_swt_equivalent_stress(S, Sm):
     >>> np.random.seed(10)
 
     Generate a dataseries for the example
-    
+
     >>> y = np.random.normal(size=100000) * 10. + 15.
 
     Let us create a mean-stress vs stress-range rainflow matrix,
@@ -143,14 +143,14 @@ def find_swt_equivalent_stress(S, Sm):
 
     Now, we can determine the equivalent zero mean stress range
 
-    >>> St = fatpack.find_swt_equivalent_stress(S, Sm, 0.4)
+    >>> St = fatpack.find_swt_equivalent_stress(S, Sm)
 
-    and then we can calculate the damage for the transformed equivalent stress 
+    and then we can calculate the damage for the transformed equivalent stress
     with the help of an endurance curve.
 
     >>> curve = fatpack.LinearEnduranceCurve(90.)
     >>> Dcorr = curve.find_miner_sum(St)
-    
+
     """
     return find_walker_equivalent_stress(S, Sm, 0.5)
 
@@ -185,7 +185,7 @@ def find_morrow_equivalent_stress(S, Sm, sf):
     >>> np.random.seed(10)
 
     Generate a dataseries for the example
-    
+
     >>> y = np.random.normal(size=100000) * 10. + 15.
 
     Let us create a mean-stress vs stress-range rainflow matrix,
@@ -198,12 +198,12 @@ def find_morrow_equivalent_stress(S, Sm, sf):
 
     >>> St = fatpack.find_morrow_equivalent_stress(S, Sm, 800.)
 
-    and then we can calculate the damage for the transformed equivalent stress 
+    and then we can calculate the damage for the transformed equivalent stress
     with the help of an endurance curve.
 
     >>> curve = fatpack.LinearEnduranceCurve(90.)
     >>> Dcorr = curve.find_miner_sum(St)
-    
+
     """
     return S / (1 - Sm / sf)
 
@@ -236,7 +236,7 @@ def find_goodman_equivalent_stress(S, Sm, su):
     >>> np.random.seed(10)
 
     Generate a dataseries for the example
-    
+
     >>> y = np.random.normal(size=100000) * 10. + 15.
 
     Let us create a mean-stress vs stress-range rainflow matrix,
@@ -249,12 +249,12 @@ def find_goodman_equivalent_stress(S, Sm, su):
 
     >>> St = fatpack.find_goodman_equivalent_stress(S, Sm, 500.)
 
-    and then we can calculate the damage for the transformed equivalent stress 
+    and then we can calculate the damage for the transformed equivalent stress
     with the help of an endurance curve.
 
     >>> curve = fatpack.LinearEnduranceCurve(90.)
     >>> Dcorr = curve.find_miner_sum(St)
-    
+
     """
     return find_morrow_equivalent_stress(S, Sm, su)
 
@@ -287,7 +287,7 @@ def find_reduced_compressive_stress(S, Sm, alpha):
     >>> np.random.seed(10)
 
     Generate a dataseries for the example
-    
+
     >>> y = np.random.normal(size=100000) * 10. + 15.
 
     Let us create a mean-stress vs stress-range rainflow matrix,
@@ -300,12 +300,12 @@ def find_reduced_compressive_stress(S, Sm, alpha):
 
     >>> St = fatpack.find_reduced_compressive_stress(S, Sm, 0.6)
 
-    and then we can calculate the damage for the transformed equivalent stress 
+    and then we can calculate the damage for the transformed equivalent stress
     with the help of an endurance curve.
 
     >>> curve = fatpack.LinearEnduranceCurve(90.)
     >>> Dcorr = curve.find_miner_sum(St)
-    
+
     """
     St = S.copy()
     Sa = S/2
