@@ -9,4 +9,7 @@
 !*.png
 !README.rst
 !LICENSE
-!tox.ini
+!.github/
+!.github/*
+!.github/workflows/
+!.github/workflows/*
