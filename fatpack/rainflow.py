@@ -38,15 +38,18 @@ def get_load_classes(y, k=64):
     return np.linspace(ymin, ymax, k+1)
 
 
-def get_load_class_boundaries(y, k=64):
-    ymin, ymax = y.min(), y.max()
+def get_load_class_boundaries(y, k=64, ymin=None, ymax=None):
+    if ymin is None:
+        ymin = y.min()
+    if ymax is None:
+        ymax = y.max()
     dy = (ymax-ymin) / (2.0*k)
     y0 = ymin - dy
     y1 = ymax + dy
-    return np.linspace(y0, y1, k+2)
+    return np.linspace(y0, y1, k+1)
 
 
-def find_reversals_strict(y, k=64):
+def find_reversals_strict(y, k=64, ymin=None, ymax=None):
     """Return reversals (peaks and valleys) and indices of reversals in `y`.
 
     The data points in the dataseries `y` are classified into `k` constant
@@ -64,6 +67,10 @@ def find_reversals_strict(y, k=64):
     k : int
         The number of intervals to divide the min-max range of the dataseries
         into.
+    ymin : float
+        min value of data series
+    ymin : float
+        max value of data series
 
     Returns
     -------
@@ -81,7 +88,7 @@ def find_reversals_strict(y, k=64):
 
     y = y.copy()  # Make sure we do not change the original sequence
     sgn = np.sign
-    Y = get_load_class_boundaries(y, k)
+    Y = get_load_class_boundaries(y, k, ymin, ymax)
     dY = Y[1] - Y[0]
 
     # Classifying points into levels
@@ -128,7 +135,7 @@ def find_reversals_strict(y, k=64):
     return y[revix], np.array(revix)
 
 
-def find_reversals(y, k=64):
+def find_reversals(y, k=64, ymin=None, ymax=None):
     """Return reversals (peaks and valleys) and indices of reversals in `y`.
 
     The data points in the dataseries `y` are classified into `k` constant
@@ -142,6 +149,10 @@ def find_reversals(y, k=64):
     k : int
         The number of intervals to divide the min-max range of the dataseries
         into.
+    ymin : float
+        min value of data series
+    ymin : float
+        max value of data series
 
     Returns
     -------
@@ -167,7 +178,7 @@ def find_reversals(y, k=64):
 
     """
 
-    Y = get_load_class_boundaries(y, k)
+    Y = get_load_class_boundaries(y, k, ymin=ymin, ymax=ymax)
     dY = Y[1] - Y[0]
 
     # Classifying points into levels
