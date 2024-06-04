@@ -46,7 +46,7 @@ def get_load_class_boundaries(y, k=64, ymin=None, ymax=None):
     dy = (ymax-ymin) / (2.0*k)
     y0 = ymin - dy
     y1 = ymax + dy
-    return np.linspace(y0, y1, k+1)
+    return np.linspace(y0, y1, k+2)
 
 
 def find_reversals_strict(y, k=64, ymin=None, ymax=None):

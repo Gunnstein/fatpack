@@ -83,7 +83,7 @@ class TestFindReversalsStrict(BaseArrayTestCase, unittest.TestCase):
     def setUp(self):
         self.result_true = TESTDATA['reversals']
         y = TESTDATA['dataseries']
-        self.result, __ = find_reversals_strict(y, k=12)
+        self.result, __ = find_reversals_strict(y, k=11)
 
 
 class TestConcatenateResidue(BaseArrayTestCase, unittest.TestCase):
@@ -125,14 +125,14 @@ class TestGetLoadClasses(BaseArrayTestCase, unittest.TestCase):
     def setUp(self):
         self.result_true = TESTDATA['classes']
         y = TESTDATA['dataseries']
-        self.result = get_load_classes(y, k=12)
+        self.result = get_load_classes(y, k=11)
 
 
 class TestGetLoadClassBoundaries(BaseArrayTestCase, unittest.TestCase):
     def setUp(self):
         self.result_true = TESTDATA['class_boundaries']
         y = TESTDATA['dataseries']
-        self.result = get_load_class_boundaries(y, k=12)
+        self.result = get_load_class_boundaries(y, k=11)
 
 
 class TestGetLoadClassBoundariesMinMax(BaseArrayTestCase, unittest.TestCase):
@@ -140,7 +140,7 @@ class TestGetLoadClassBoundariesMinMax(BaseArrayTestCase, unittest.TestCase):
         self.result_true = TESTDATA['class_boundaries_minmax']
         y = TESTDATA['dataseries']
         yRange = np.max(y) - np.min(y)
-        self.result = get_load_class_boundaries(y, k=12, ymin=np.min(y) - yRange/2, ymax=np.max(y) + yRange/2)
+        self.result = get_load_class_boundaries(y, k=11, ymin=np.min(y) - yRange/2, ymax=np.max(y) + yRange/2)
 
 
 class TestFindRainflowMatrix(BaseArrayTestCase, unittest.TestCase):
@@ -171,7 +171,7 @@ class TestFindRainflowRangesStrict(BaseArrayTestCase, unittest.TestCase):
     def setUp(self):
         self.result_true = TESTDATA['ranges_total_strict']
         self.result = find_rainflow_ranges_strict(
-                                                TESTDATA['dataseries'], k=12)
+                                                TESTDATA['dataseries'], k=11)
 
 
 class TestFindRangeCount(unittest.TestCase):
