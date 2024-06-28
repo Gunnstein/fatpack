@@ -17,7 +17,7 @@ def ensure_array(method):
         if x_is_float_or_int:
             xm = np.array([x])
         else:
-            xm = np.asfarray(x)
+            xm = np.asarray(x, dtype=float)
         ym = method(self, xm)
         if x_is_float_or_int:
             ym = ym[0]
@@ -123,7 +123,7 @@ class AbstractEnduranceCurve(object):
 
         """
 
-        Sr = np.asfarray(S)
+        Sr = np.asarray(S, dtype=float)
         shape = Sr.shape
         if len(shape) == 1:
             miner_sum = np.sum(1. / self.get_endurance(Sr))
