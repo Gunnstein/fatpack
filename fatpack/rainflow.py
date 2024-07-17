@@ -262,13 +262,15 @@ def concatenate_reversals(reversals1, reversals2):
     return np.concatenate(result)
 
 
-def find_rainflow_cycles(reversals):
+def find_rainflow_cycles(reversals, include_open_cycles=False):
     """Return the rainflow cycles and residue from a sequence of reversals.
 
     Arguments
     ---------
     reversals : 1darray
         An 1D-array of reversals.
+    include_open_cycles : bool, optional
+        An optional flag to include open cycles (default is False).
 
     Returns
     -------
@@ -314,7 +316,7 @@ def find_rainflow_cycles(reversals):
 
     """
 
-    result = []
+    cycles_firstpass = []
     residue = []
     len_residue = 0
     for reversal in reversals:
@@ -324,13 +326,31 @@ def find_rainflow_cycles(reversals):
             S0, S1, S2, S3 = residue[-4], residue[-3], residue[-2], residue[-1]
             dS1, dS2, dS3 = fabs(S1-S0), fabs(S2-S1), fabs(S3-S2)
             if (dS2 <= dS1) and (dS2 <= dS3):
-                result += [[S1, S2]]
+                cycles_firstpass += [[S1, S2]]
                 del residue[-3]
                 del residue[-2]
                 len_residue -= 2
             else:
                 break
-    return np.array(result), np.array(residue)
+    
+    if include_open_cycles:
+        cycles_firstpass = np.array(cycles_firstpass)
+        processed_residue = concatenate_reversals(residue, residue)
+        cycles_open_sequence = find_rainflow_cycles(processed_residue)[0]
+        found_cycles_firstpass = len(cycles_firstpass.shape) == 2
+        found_cycles_open_sequence = len(cycles_open_sequence.shape) == 2
+        if found_cycles_firstpass and found_cycles_open_sequence:
+            rainflow_cycles = np.concatenate((cycles_firstpass, cycles_open_sequence))
+        elif found_cycles_firstpass:
+            rainflow_cycles = cycles_firstpass
+        elif found_cycles_open_sequence:
+            rainflow_cycles = cycles_open_sequence
+        else:
+            raise ValueError("Could not find any cycles in sequence")
+    else:
+        rainflow_cycles = cycles_firstpass
+    
+    return np.array(rainflow_cycles), np.array(residue)
 
 
 def find_rainflow_matrix(data_array, rowbins, colbins, counts=None, 
@@ -492,19 +512,7 @@ def find_rainflow_ranges(y, k=64, return_means=False):
     """
 
     reversals, _ = find_reversals(y, k)
-    cycles_firstpass, residue = find_rainflow_cycles(reversals)
-    processed_residue = concatenate_reversals(residue, residue)
-    cycles_open_sequence, _ = find_rainflow_cycles(processed_residue)
-    found_cycles_firstpass = len(cycles_firstpass.shape) == 2
-    found_cycles_open_sequence = len(cycles_open_sequence.shape) == 2
-    if found_cycles_firstpass and found_cycles_open_sequence:
-        cycles = np.concatenate((cycles_firstpass, cycles_open_sequence))
-    elif found_cycles_firstpass:
-        cycles = cycles_firstpass
-    elif found_cycles_open_sequence:
-        cycles = cycles_open_sequence
-    else:
-        raise ValueError("Could not find any cycles in sequence")
+    cycles, residue = find_rainflow_cycles(reversals, include_open_cycles=True)
     ranges = np.abs(cycles[:, 1] - cycles[:, 0])
     if return_means:
         means = 0.5 * (cycles[:, 0] + cycles[:, 1])
@@ -559,19 +567,7 @@ def find_rainflow_ranges_strict(y, k=64, return_means=False):
     """
 
     reversals, _ = find_reversals_strict(y, k)
-    cycles_firstpass, residue = find_rainflow_cycles(reversals)
-    processed_residue = concatenate_reversals(residue, residue)
-    cycles_open_sequence, _ = find_rainflow_cycles(processed_residue)
-    found_cycles_firstpass = len(cycles_firstpass.shape) == 2
-    found_cycles_open_sequence = len(cycles_open_sequence.shape) == 2
-    if found_cycles_firstpass and found_cycles_open_sequence:
-        cycles = np.concatenate((cycles_firstpass, cycles_open_sequence))
-    elif found_cycles_firstpass:
-        cycles = cycles_firstpass
-    elif found_cycles_open_sequence:
-        cycles = cycles_open_sequence
-    else:
-        raise ValueError("Could not find any cycles in sequence")
+    cycles, residue = find_rainflow_cycles(reversals, include_open_cycles=True)
     ranges = np.abs(cycles[:, 1] - cycles[:, 0])
     if return_means:
         means = 0.5 * (cycles[:, 0] + cycles[:, 1])
