@@ -320,11 +320,44 @@ class TestTriLinearEnduranceCurve(TestBiLinearEnduranceCurve):
 
 class TestRaceTrackFilter(BaseArrayTestCase, unittest.TestCase):
     def setUp(self):
+        # These are the classified (binned) reversal values, consistent
+        # with what `find_reversals` returns elsewhere in this file (see
+        # `TestFindReversals`/`TestFindReversalsStrict`). Before the fix
+        # for GH issue #28, `find_reversals_racetrack_filtered` incorrectly
+        # returned the raw dataseries values at the reversal indices
+        # instead, which is what this fixture used to encode.
         self.result_true = np.array(
-            [4.2,  7.3,  2., 10.3,  5.2,  8.5,  2.2, 12.,  5.5, 11.1,  1.,
-             9.5,  6., 12.,  3.9,  8.3,  1.2,  8.6,  3.9,  6.2])
+            [4.265625,  7.359375,  2.03125, 10.28125,  5.125, 8.5625,
+             2.203125, 12., 5.46875, 11.140625, 1., 9.421875,
+             5.984375, 12., 3.921875, 8.21875, 1.171875, 8.5625,
+             3.921875, 6.15625])
         y = TESTDATA['dataseries']
         self.result, _ = find_reversals_racetrack_filtered(y, 2, k=64)
+
+
+class TestRaceTrackFilterReturnsClassifiedValues(unittest.TestCase):
+    """Regression test for GH issue #28: `find_reversals_racetrack_filtered`
+    returned the raw dataseries values at the reversal indices instead of
+    the classified reversal values.
+    """
+    def test_values_are_not_raw_dataseries_values(self):
+        np.random.seed(10)
+        y = np.random.normal(size=200) * 10.
+        rev, ix = find_reversals_racetrack_filtered(y, h=5., k=6)
+        self.assertFalse(np.allclose(rev, y[ix]))
+
+    def test_values_match_reversals_of_filtered_series(self):
+        np.random.seed(10)
+        y = np.random.normal(size=200) * 10.
+        k = 6
+        _, ix = find_reversals(y, k=k)
+        z, ixz = racetrack_filter(y[ix], 5.)
+        rev_expected, ixr = find_reversals(z, k=k)
+
+        rev, ix_rtf = find_reversals_racetrack_filtered(y, h=5., k=k)
+
+        np.testing.assert_allclose(rev, rev_expected)
+        np.testing.assert_array_equal(ix_rtf, ix[ixz][ixr])
 
 
 class StressCorrectorTestCaseMixin(object):
