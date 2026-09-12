@@ -211,6 +211,58 @@ class TestFindReversals(unittest.TestCase):
         np.testing.assert_allclose(self.reversal_est, self.reversal_true)
 
 
+class TestFindReversalsNoVariation(unittest.TestCase):
+    """Regression tests for GH issue #14: `find_reversals` (and the
+    strict variant) used to raise IndexError on a dataseries with no
+    turning points, instead of returning an empty result.
+    """
+    def test_constant_series_has_no_reversals(self):
+        y = np.array([5., 5., 5., 5., 5.])
+        reversals, indices = find_reversals(y)
+        self.assertEqual(reversals.size, 0)
+        self.assertEqual(indices.size, 0)
+
+    def test_constant_series_has_no_reversals_strict(self):
+        y = np.array([5., 5., 5., 5., 5.])
+        reversals, indices = find_reversals_strict(y)
+        self.assertEqual(reversals.size, 0)
+        self.assertEqual(indices.size, 0)
+
+    def test_monotonic_series_has_start_and_end_as_reversals(self):
+        y = np.array([1., 2., 3., 4., 5.])
+        reversals, indices = find_reversals(y)
+        np.testing.assert_allclose(reversals, [1., 5.])
+        np.testing.assert_allclose(indices, [0, 4])
+
+    def test_monotonic_series_has_start_and_end_as_reversals_strict(self):
+        y = np.array([1., 2., 3., 4., 5.])
+        reversals, indices = find_reversals_strict(y)
+        np.testing.assert_allclose(reversals, [1., 5.])
+        np.testing.assert_allclose(indices, [0, 4])
+
+
+class TestFindRainflowRangesNoCycles(unittest.TestCase):
+    """Regression tests for GH issue #14: `find_rainflow_ranges` used to
+    raise IndexError (from deep inside `find_reversals` or
+    `concatenate_reversals`) instead of the documented ValueError when
+    a dataseries has no rainflow cycles.
+    """
+    def test_constant_series_raises_value_error(self):
+        y = np.array([5., 5., 5., 5., 5.])
+        with self.assertRaises(ValueError):
+            find_rainflow_ranges(y)
+
+    def test_constant_series_raises_value_error_strict(self):
+        y = np.array([5., 5., 5., 5., 5.])
+        with self.assertRaises(ValueError):
+            find_rainflow_ranges_strict(y)
+
+    def test_monotonic_series_returns_single_half_cycle_range(self):
+        y = np.array([1., 2., 3., 4., 5.])
+        ranges = find_rainflow_ranges(y)
+        np.testing.assert_allclose(ranges, [4.])
+
+
 class TestLinearEnduranceCurve(unittest.TestCase):
     def setUp(self):
         self.m_true = 3.0
