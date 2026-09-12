@@ -126,7 +126,7 @@ def find_reversals_racetrack_filtered(y, h, k=64):
     z, ixz = racetrack_filter(y[ix], h)
     ix = ix[ixz]
     rev, ixr = find_reversals(z, k=k)
-    return y[ix[ixr]], ix[ixr]
+    return rev, ix[ixr]
 
 
 if __name__ == "__main__":
