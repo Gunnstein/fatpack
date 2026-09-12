@@ -116,6 +116,10 @@ def find_reversals_strict(y, k=64, ymin=None, ymax=None):
         if yi != y[ix[-1]]:
             ix.append(n)
 
+    if len(ix) == 1:
+        # The dataseries never changes load class, i.e no reversals.
+        return np.array([]), np.array([], dtype=int)
+
     # Peak-valley filtering
     revix = [0]
     for n in range(len(ix)-1):
@@ -126,11 +130,17 @@ def find_reversals_strict(y, k=64, ymin=None, ymax=None):
             revix.append(ix[n])
 
     # Peak-valley filtering of last point
-    dy1, dy2 = y[revix[-1]]-y[revix[-2]], y[ix[-1]] - y[revix[-1]]
-    if sgn(dy1) == sgn(dy2):
-        revix[-1] = ix[-1]
-    else:
+    if len(revix) < 2:
+        # No interior turning point was found, i.e the dataseries is
+        # monotonic (in the classified sense) up to this point, so the
+        # final point is the other reversal.
         revix.append(ix[-1])
+    else:
+        dy1, dy2 = y[revix[-1]]-y[revix[-2]], y[ix[-1]] - y[revix[-1]]
+        if sgn(dy1) == sgn(dy2):
+            revix[-1] = ix[-1]
+        else:
+            revix.append(ix[-1])
 
     return y[revix], np.array(revix)
 
@@ -188,12 +198,20 @@ def find_reversals(y, k=64, ymin=None, ymax=None):
     # Find successive datapoints in each class
     dz = z[1:]-z[:-1]
     ix = np.argwhere(dz != 0.).ravel()
+    if ix.size == 0:
+        # The dataseries never changes load class, i.e no reversals.
+        return np.array([]), np.array([], dtype=int)
     ix = np.append(ix, (ix[-1]+1))
     dz1, dz2 = np.diff(z[ix][:-1]), np.diff(z[ix][1:])
     dz = dz1 * dz2
     revix = ix[np.argwhere(dz < 0.).ravel()+1]
     revix = np.insert(revix, (0), ix[0])
-    if (z[revix[-1]] - z[revix[-2]])*(z[ix[-1]] - z[revix[-1]]) < 0.:
+    if revix.size < 2:
+        # No interior turning point was found, i.e the dataseries is
+        # monotonic (in the classified sense), so the final point is the
+        # other reversal.
+        revix = np.append(revix, ix[-1])
+    elif (z[revix[-1]] - z[revix[-2]])*(z[ix[-1]] - z[revix[-1]]) < 0.:
         revix = np.append(revix, ix[-1])
     return z[revix], np.array(revix)
 
@@ -493,10 +511,17 @@ def find_rainflow_ranges(y, k=64, return_means=False):
 
     reversals, _ = find_reversals(y, k)
     cycles_firstpass, residue = find_rainflow_cycles(reversals)
-    processed_residue = concatenate_reversals(residue, residue)
-    cycles_open_sequence, _ = find_rainflow_cycles(processed_residue)
     found_cycles_firstpass = len(cycles_firstpass.shape) == 2
-    found_cycles_open_sequence = len(cycles_open_sequence.shape) == 2
+    if len(residue) >= 2:
+        # `concatenate_reversals` requires at least two points in each
+        # sequence; a shorter residue (0 or 1 points) cannot contain any
+        # cycle once closed on itself.
+        processed_residue = concatenate_reversals(residue, residue)
+        cycles_open_sequence, _ = find_rainflow_cycles(processed_residue)
+        found_cycles_open_sequence = len(cycles_open_sequence.shape) == 2
+    else:
+        cycles_open_sequence = np.array([])
+        found_cycles_open_sequence = False
     if found_cycles_firstpass and found_cycles_open_sequence:
         cycles = np.concatenate((cycles_firstpass, cycles_open_sequence))
     elif found_cycles_firstpass:
@@ -560,10 +585,17 @@ def find_rainflow_ranges_strict(y, k=64, return_means=False):
 
     reversals, _ = find_reversals_strict(y, k)
     cycles_firstpass, residue = find_rainflow_cycles(reversals)
-    processed_residue = concatenate_reversals(residue, residue)
-    cycles_open_sequence, _ = find_rainflow_cycles(processed_residue)
     found_cycles_firstpass = len(cycles_firstpass.shape) == 2
-    found_cycles_open_sequence = len(cycles_open_sequence.shape) == 2
+    if len(residue) >= 2:
+        # `concatenate_reversals` requires at least two points in each
+        # sequence; a shorter residue (0 or 1 points) cannot contain any
+        # cycle once closed on itself.
+        processed_residue = concatenate_reversals(residue, residue)
+        cycles_open_sequence, _ = find_rainflow_cycles(processed_residue)
+        found_cycles_open_sequence = len(cycles_open_sequence.shape) == 2
+    else:
+        cycles_open_sequence = np.array([])
+        found_cycles_open_sequence = False
     if found_cycles_firstpass and found_cycles_open_sequence:
         cycles = np.concatenate((cycles_firstpass, cycles_open_sequence))
     elif found_cycles_firstpass:
