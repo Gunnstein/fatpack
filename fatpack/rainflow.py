@@ -431,9 +431,9 @@ def find_rainflow_matrix(data_array, rowbins, colbins, counts=None,
     Scol = data_array[:, 1]
 
     if isinstance(rowbins, int):
-        rowbins = np.linspace(Srow.min(), Srow.max(), rowbins)
+        rowbins = np.linspace(Srow.min(), Srow.max(), rowbins + 1)
     if isinstance(colbins, int):
-        colbins = np.linspace(Scol.min(), Scol.max(), colbins)
+        colbins = np.linspace(Scol.min(), Scol.max(), colbins + 1)
     mat, _, _ = np.histogram2d(Srow, Scol, [rowbins, colbins], 
                                weights=counts)
 
