@@ -151,6 +151,22 @@ class TestFindRainflowMatrix(BaseArrayTestCase, unittest.TestCase):
         self.result = find_rainflow_matrix(cycles, bins, bins)
 
 
+class TestFindRainflowMatrixIntBins(unittest.TestCase):
+    def setUp(self):
+        cycles = TESTDATA['cycles']
+        self.rowbins, self.colbins, self.result = find_rainflow_matrix(
+            cycles, 5, 7, return_bins=True)
+
+    def test_bin_edge_counts_match_requested_bin_counts(self):
+        # `rowbins`/`colbins` given as an int are the number of bins, which
+        # needs one more edge than bins (5 bins -> 6 edges).
+        self.assertEqual(self.rowbins.size, 6)
+        self.assertEqual(self.colbins.size, 8)
+
+    def test_matrix_shape_matches_requested_bin_counts(self):
+        self.assertEqual(self.result.shape, (5, 7))
+
+
 class TestFindRainflowRanges(BaseArrayTestCase, unittest.TestCase):
     def setUp(self):
         self.result_true = TESTDATA['ranges_total']
